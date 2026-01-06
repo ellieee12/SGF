@@ -2,6 +2,9 @@ package sgf is
 
     type T_SGF is limited private;
     
+    procedure Move(SGF : in out T_SGF; path : in String);
+
+    
 private
     
     type T_Noeud is
@@ -9,17 +12,12 @@ private
             Name : String;
             Size: Integer;
             isDirectory : Boolean;
-            Child : T_Pointer_Children;
+            Child : T_Pointer_Noeud;
             Parent : T_Pointer_Noeud;
-        end record;
-    type T_Pointer_Noeud is access T_Noeud;
-    
-    type T_Children is 
-        record
             next : T_Pointer_Noeud;
             before : T_Pointer_Noeud;
-        end record
-    type T_Pointer_Children is access T_Children;
+        end record;
+    type T_Pointer_Noeud is access T_Noeud;
     
     type T_SGF is
         record
