@@ -17,25 +17,19 @@ package body sgf is
         temp_node : T_Pointer_Node;
         start : Positive;
     begin
-        if path = "/" then
-            return SGF.root;
-        end if;
         if path(path'First) = '/' then
             temp_node := SGF.Root;
             start := path'First + 1;
-        elsif path'Length >= 2 and then (path(path'First .. path'First + 1) = "./" or path(path'First .. path'First + 2) = "../") then
+        elsif path(path'First) = '.' then
             temp_node := SGF.Current;
             start := path'First;
         else
             raise Incorect_Path_Format with "The path given is incorrect !";
         end if;
-        if temp_node = Null then
-            raise Dir_Not_Found with "The path contain an unknown directory !";
-        end if;
-        for I in start .. path'Last + 1 loop
-            if path (I) = '/' or else I = path'Last + 1 then
+        for I in start .. path'Last loop
+            if (I = path'Last and path(I) = '/') or else path(I+1) = '/' then
                 declare
-                    part : constant String := Path (Start .. I - 1);
+                    part : constant String := path(Start .. I);
                 begin
                     if part = ".." then
                         if temp_node.all.Parent /= Null then
@@ -43,14 +37,14 @@ package body sgf is
                         end if;
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        while temp_node /= Null and then Temp_Node.Name /= part loop
+                        while temp_node /= Null and then temp_node.all.Name /= part loop
                             temp_node := temp_node.all.Next;
                         end loop;
                         if temp_node = Null then
                             raise Dir_Not_Found with "The path contain an unknown directory !";
                         end if;
                     end if;
-                    start := I + 1;
+                    start := I + 2;
                 end;
             end if;
         end loop;
@@ -64,7 +58,7 @@ package body sgf is
         if not temp_node.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         end if;
-        SGF.Current.all := temp_node.all;
+        SGF.Current := temp_node;
     end Current_Directory;
     
     procedure List_Files(SGF : in out T_SGF; path : in String := ".") is
@@ -135,7 +129,7 @@ package body sgf is
         while tmp_node /= null loop
             current_name := tmp_node.all.Name;
             path_name := "/" & current_name & "/" & path_name;
-            tmp_node := tmp_node.Parent;
+            tmp_node := tmp_node.all.Parent;
         end loop;
         return SU.To_String(path_name);
     end Get_Current_Directory; 
