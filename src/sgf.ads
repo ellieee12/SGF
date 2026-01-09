@@ -1,8 +1,10 @@
+with Ada.Strings.Unbounded;
+use Ada.Strings.Unbounded;
 package sgf is
 
     type T_SGF is private;
     function Is_Empty (Sgf : in T_SGF) return boolean;
-    procedure Move(SGF : in out T_SGF; path : in String);
+    --procedure Move(SGF : in out T_SGF; path : in String);
     procedure Initialize (Sgf : out T_SGF);
    
     function Get_Current_Directory(Sgf : in T_SGF) return String;
@@ -11,7 +13,8 @@ package sgf is
                                              Name : in String;
                                              Size : in Integer);
    
-    procedure Create_Directory (Sgf : in out T_SGF; Name : in String);
+    --procedure Create_Directory (Sgf : in out T_SGF; Name : in String);
+    
 
     procedure Current_Directory(SGF : in out T_SGF; path : in String);
 
@@ -20,7 +23,7 @@ private
     type T_Pointer_Node is access T_Node;
     type T_Node is
         record
-            Name : String (1 .. 255);
+            Name : Unbounded_String;
             Size: Integer;
             IsDirectory : Boolean;
             Child : T_Pointer_Node;

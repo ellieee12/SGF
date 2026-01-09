@@ -1,0 +1,19 @@
+[GENERATED OBJECT FILE]
+b__test_sgf.o
+[PROJECT FILES]
+/home/n7student/Documents/SGF/default.gpr
+20260109131316 2323910d729899931c0c0b98aa31e457
+[BOUND OBJECT FILES]
+/home/n7student/Documents/SGF/obj/sgf.o
+/home/n7student/Documents/SGF/obj/test_sgf.o
+[GENERATED SOURCE FILES]
+b__test_sgf.ads
+b__test_sgf.adb
+b__test_sgf.ali
+[RESULTING OPTIONS]
+-L/home/n7student/Documents/SGF/obj/
+-L/home/n7student/Documents/SGF/obj/
+-L/usr/lib/gcc/x86_64-linux-gnu/13/adalib/
+-shared
+-lgnat-13
+-ldl
