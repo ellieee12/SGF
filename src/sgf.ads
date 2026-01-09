@@ -13,26 +13,26 @@ package sgf is
    
    procedure Create_Directory (Sgf : in out T_SGF; Name : in String);
 
-    
+   procedure Current_Directory(SGF : in out T_SGF; path : in String);
+
 private
-   type T_Noeud;
-    type T_Pointer_Noeud is access T_Noeud;
-    type T_Noeud is
+    
+    type T_Node is
         record
             Name : String (1 .. 255);
             Size: Integer;
             IsDirectory : Boolean;
-            Child : T_Pointer_Noeud;
-            Parent : T_Pointer_Noeud;
-            Next : T_Pointer_Noeud;
-            Before : T_Pointer_Noeud;
+            Child : T_Pointer_Node;
+            Parent : T_Pointer_Node;
+            Next : T_Pointer_Node;
+            Before : T_Pointer_Node;
         end record;
     
     
     type T_SGF is
         record
-            Root : T_Pointer_Noeud;
-            Current : T_Pointer_Noeud;
+            Root : T_Pointer_Node;
+            Current : T_Pointer_Node;
         end record;
    
    
