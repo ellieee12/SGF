@@ -65,7 +65,7 @@ package body sgf is
    end Initialize;
    
    function Get_Current_Directory(Sgf : in T_SGF) return String is
-      tmp_node : T_Noeud;
+      tmp_node : T_Node;
       path_name, current_name : String;
    begin
       tmp_node := sgf.Current;
@@ -83,14 +83,14 @@ package body sgf is
                                             Name : in String;
                                             Size : in String) is
       Negative_Size_Error, Empty_Name_Error: Exception;
-      current_child : T_Noeud;
+      current_child : T_Node;
    begin
       if Size < 0 then
          raise Negative_Size_Error;
       end if;
       Validate_Name;
       current_child := Sgf.Current.all.Child;
-      Sgf.Current.all.Child := new T_Noeud(Name,Size,False,null,Sgf.Current,null,null);
+      Sgf.Current.all.Child := new T_Node(Name,Size,False,null,Sgf.Current,null,null);
       
       --TODO : exception handling
    exception

@@ -16,7 +16,8 @@ package sgf is
    procedure Current_Directory(SGF : in out T_SGF; path : in String);
 
 private
-    
+    type T_Node;
+    type T_Pointer_Node is access T_Node;
     type T_Node is
         record
             Name : String (1 .. 255);
