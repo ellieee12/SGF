@@ -15,57 +15,62 @@ package body sgf is
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
-        part : Unbounded_String;
     begin
         if path(path'First) = '/' then
-            temp_node := SGF.Root.all.Child;
+            temp_node := SGF.Root;
             start := path'First + 1;
-        elsif path'Length >= 2 and then path(path'First .. path'First + 1) = "./" then
-            temp_node := SGF.Current.all.Child;
-            start := path'First + 2;
-        elsif path'Length >= 3 and then path(path'First .. path'First + 2) = "../" then
+        elsif path'Length >= 2 and then (path(path'First .. path'First + 1) = "./" or path(path'First .. path'First + 2) = "../") then
             temp_node := SGF.Current;
-            start := path'First + 3;
+            start := path'First;
         else
             raise Incorect_Path_Format with "The path given is incorrect !";
         end if;
         if temp_node = Null then
             raise Dir_Not_Found with "The path contain an unknown directory !";
         end if;
-        for I in start .. path'Last + 1 loop
-            if path (I) = '/' or else I = path'Last + 1 then
-                part := SU.To_Unbounded_String(path(Start .. I - 1));
-                if part = ".." then
-                    if temp_node.all.Parent /= Null then
-                        temp_node := temp_node.all.Parent;
+        for I in start .. path'Last loop
+            if path (I) = '/' or else I = path'Last then
+                declare
+                    if path (I) = '/' then
+                        part : constant String := Path (Start .. I - 1);
+                    else
+                        part : constant String := Path (Start .. I);
                     end if;
-                else
-                    while temp_node /= Null and then Temp_Node.Name /= part loop
-                        temp_node := temp_node.all.Next;
-                    end loop;
-                    if temp_node = Null then
-                        raise Dir_Not_Found with "The path contain an unknown directory !";
+                begin
+                    if part = ".." then
+                        if temp_node.all.Parent /= Null then
+                            temp_node := temp_node.all.Parent;
+                        end if;
+                    elsif part /= "." then
+                        temp_node := temp_node.all.Child
+                        while temp_node /= Null and then Temp_Node.Name /= part loop
+                            temp_node := temp_node.all.Next;
+                        end loop;
+                        if temp_node = Null then
+                            raise Dir_Not_Found with "The path contain an unknown directory !";
+                        end if;
                     end if;
-                    if not temp_node.IsDirectory then
-                        raise Not_A_Dir with "File is not a directory !";
-                    end if;
-                    temp_node := temp_node.all.Child;
-                end if;
-                Start := I + 1;
+                    start := I + 1;
+                end;
             end if;
         end loop;
         return temp_node;
     end Get_Node_From_Path;
     
     procedure Current_Directory(SGF : in out T_SGF; path : in String) is
+        temp_node : T_Pointer_Node;
     begin
-        SGF.Current.all := Get_Node_From_Path(SGF, path);
+        temp_node := Get_Node_From_Path(SGF, path)
+        if not temp_node.IsDirectory then
+            raise Not_A_Dir with "File is not a directory !";
+        end if;
+        SGF.Current.all := temp_node.all;
     end Current_Directory;
     
     procedure List_Files(SGF : in out T_SGF; path : in String := ".") is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
+        temp_node := Get_Node_From_Path(SGF, path).all.Child;
         while temp_node /= null then
             Put_Line(temp_node.Name);
             temp_node := temp_node.all.Next;
@@ -76,7 +81,7 @@ package body sgf is
         temp_node : T_Pointer_Node;
         new_path : String;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
+        temp_node := Get_Node_From_Path(SGF, path).all.Child;
         while temp_node /= null then
             Put_Line(temp_node.Name);
             if temp_node.all.Child /= Null then
@@ -89,6 +94,7 @@ package body sgf is
     
     procedure Remove(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
+        
     begin
         temp_node := Get_Node_From_Path(SGF, path);
         while temp_node /= null then
