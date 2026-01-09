@@ -18,6 +18,12 @@ package sgf is
     
 
     procedure Current_Directory(SGF : in out T_SGF; path : in String);
+    
+    procedure List_Files(SGF : in out T_SGF; path : in String := ".");
+    
+    procedure List_Files_Recursive(SGF : in out T_SGF; path : in String := ".");
+    
+    procedure Remove(SGF : in out T_SGF; path : in String);
 
 private
     type T_Node;
@@ -50,5 +56,7 @@ private
     Not_A_Dir : exception;
    
     procedure Validate_Name (Name : in String);
+    
+    function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node;
   
 end sgf;
