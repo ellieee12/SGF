@@ -1,3 +1,10 @@
 *.xml
 obj/gpsauto.cgpr
 \#*.adb\#
+*.o
+*.ali
+*.stdout
+*.stderr
+*.cgpr
+*.cgpr
+*.xml
