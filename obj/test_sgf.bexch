@@ -1,19 +1,20 @@
 [GENERATED OBJECT FILE]
 b__test_sgf.o
 [PROJECT FILES]
-/home/n7student/Documents/SGF/default.gpr
-20260109131316 2323910d729899931c0c0b98aa31e457
+C:\Users\flori\Documents\GitHub\SGF\default.gpr
+20260109131330 1e5f44d864a0033b0e24be797152d729
 [BOUND OBJECT FILES]
-/home/n7student/Documents/SGF/obj/sgf.o
-/home/n7student/Documents/SGF/obj/test_sgf.o
+C:\Users\flori\Documents\GitHub\SGF\obj\sgf.o
+C:\Users\flori\Documents\GitHub\SGF\obj\test_sgf.o
 [GENERATED SOURCE FILES]
 b__test_sgf.ads
 b__test_sgf.adb
 b__test_sgf.ali
 [RESULTING OPTIONS]
--L/home/n7student/Documents/SGF/obj/
--L/home/n7student/Documents/SGF/obj/
--L/usr/lib/gcc/x86_64-linux-gnu/13/adalib/
--shared
--lgnat-13
--ldl
+-LC:\Users\flori\Documents\GitHub\SGF\obj\
+-LC:\Users\flori\Documents\GitHub\SGF\obj\
+-LC:/gnat/2021/lib/gcc/x86_64-w64-mingw32/10.3.1/adalib/
+-static
+-static-libgcc
+C:/gnat/2021/lib/gcc/x86_64-w64-mingw32/10.3.1/adalib/libgnat.a
+-Wl,--stack=0x2000000
