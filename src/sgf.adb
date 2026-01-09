@@ -70,7 +70,11 @@ package body sgf is
     procedure List_Files(SGF : in out T_SGF; path : in String := ".") is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path).all.Child;
+        temp_node := Get_Node_From_Path(SGF, path);
+        if not temp_node.IsDirectory then
+            raise Not_A_Dir with "File is not a directory !";
+        end if;
+        temp_node := temp_node.all.Child;
         while temp_node /= null then
             Put_Line(temp_node.Name);
             temp_node := temp_node.all.Next;
@@ -81,7 +85,11 @@ package body sgf is
         temp_node : T_Pointer_Node;
         new_path : String;
     begin
-        temp_node := Get_Node_From_Path(SGF, path).all.Child;
+        temp_node := Get_Node_From_Path(SGF, path);
+        if not temp_node.IsDirectory then
+            raise Not_A_Dir with "File is not a directory !";
+        end if;
+        temp_node := temp_node.all.Child;
         while temp_node /= null then
             Put_Line(temp_node.Name);
             if temp_node.all.Child /= Null then
