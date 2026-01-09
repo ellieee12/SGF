@@ -13,7 +13,8 @@ package sgf is
                                              Name : in String;
                                              Size : in Integer);
    
-    --procedure Create_Directory (Sgf : in out T_SGF; Name : in String);
+    procedure Create_Directory_Current_Directory (Sgf : in  out T_SGF;
+                                             Name : in String);
     
 
     procedure Current_Directory(SGF : in out T_SGF; path : in String);

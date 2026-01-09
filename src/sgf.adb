@@ -85,34 +85,49 @@ package body sgf is
                                              Name : in String;
                                              Size : in Integer) is
         Negative_Size_Error, Empty_Name_Error: Exception;
-        current_child : T_Pointer_Node;
-      
+        current_child, new_node : T_Pointer_Node;
+        head,tail : T_Pointer_Node := null;
     begin
         if Size < 0 then
             raise Negative_Size_Error;
         end if;
         Validate_Name(Name);
-        current_child := Sgf.Current.all.Child;
-        while current_child /= null loop
-            current_child := current_child.Next;
-        end loop;
-        Sgf.Current.all.Child := new T_Node'(SU.To_Unbounded_String(Name),Size,False,null,Sgf.Current,null,null);
-        current_child := Sgf.Current.all.Child;
+        new_node := new T_Node'(SU.To_Unbounded_String(Name),Size,False,null,Sgf.Current,null,null);
+        head:=Sgf.Current.all.Child;
+        tail := head;
+        if tail = null then 
+            sgf.Current.all.Child := new_node;
+        else
+            while tail.all.Next /= null loop
+                tail := tail.all.Next;
+            end loop;
+            tail.all.next := new_node;
+            new_node.all.Before := Tail;
+        end if;
         --TODO : exception handling
-    exception
-        when Negative_Size_Error =>
-            null;
-        when Control_Character_Error =>
-            null;
-        when Empty_Name_Error =>
-            null;
-        when Dot_Name_Error =>
-            null;
-        when Forbidden_Character_Error =>
-            null;
-        when others =>
-            null;
     end Create_File_Current_Directory;
+    
+    procedure Create_Directory_Current_Directory (Sgf : in  out T_SGF;
+                                             Name : in String) is
+        Negative_Size_Error, Empty_Name_Error: Exception;
+        current_child, new_node : T_Pointer_Node;
+        head,tail : T_Pointer_Node := null;
+    begin
+        Validate_Name(Name);
+        new_node := new T_Node'(SU.To_Unbounded_String(Name),0,True,null,Sgf.Current,null,null);
+        head:=Sgf.Current.all.Child;
+        tail := head;
+        if tail = null then 
+            sgf.Current.all.Child := new_node;
+        else
+            while tail.all.Next /= null loop
+                tail := tail.all.Next;
+            end loop;
+            tail.all.next := new_node;
+            new_node.all.Before := Tail;
+        end if;
+        --TODO : exception handling
+    end Create_Directory_Current_Directory ;
    
     procedure Validate_Name (Name : in String) is
       
