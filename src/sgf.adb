@@ -4,14 +4,18 @@ with GNAT.Spitbol; use GNAT.Spitbol;
 with Ada.Text_IO;          use Ada.Text_IO;
 with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
+with Ada.Unchecked_Deallocation;
 
 package body sgf is
     package SU renames Ada.Strings.Unbounded;
 
-    procedure Current_Directory(SGF : in out T_SGF; path : in String) is
+    procedure Free is
+            new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
+    
+    function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
-        part: String(1..255);
+        part : Unbounded_String;
     begin
         if path(path'First) = '/' then
             temp_node := SGF.Root.all.Child;
@@ -30,7 +34,7 @@ package body sgf is
         end if;
         for I in start .. path'Last + 1 loop
             if path (I) = '/' or else I = path'Last + 1 then
-                part := path(Start .. I - 1);
+                part := SU.To_Unbounded_String(path(Start .. I - 1));
                 if part = ".." then
                     if temp_node.all.Parent /= Null then
                         temp_node := temp_node.all.Parent;
@@ -50,8 +54,49 @@ package body sgf is
                 Start := I + 1;
             end if;
         end loop;
-        SGF.Current.all := temp_node.all;
+        return temp_node;
+    end Get_Node_From_Path;
+    
+    procedure Current_Directory(SGF : in out T_SGF; path : in String) is
+    begin
+        SGF.Current.all := Get_Node_From_Path(SGF, path);
     end Current_Directory;
+    
+    procedure List_Files(SGF : in out T_SGF; path : in String := ".") is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        while temp_node /= null then
+            Put_Line(temp_node.Name);
+            temp_node := temp_node.all.Next;
+        end loop;
+    end List_Files;
+    
+    procedure List_Files_Recursive(SGF : in out T_SGF; path : in String := ".") is
+        temp_node : T_Pointer_Node;
+        new_path : String;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        while temp_node /= null then
+            Put_Line(temp_node.Name);
+            if temp_node.all.Child /= Null then
+                new_path := path & "/" a temp_node.all.Name;
+                List_Files_Recursive(SGF, new_path)
+            end if;
+            temp_node := temp_node.all.Next;
+        end loop;
+    end List_Files_Recursive;
+    
+    procedure Remove(SGF : in out T_SGF; path : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        while temp_node /= null then
+            Put_Line(temp_node.Name);
+            temp_node := temp_node.all.Next;
+        end loop;
+    end Remove;
+
 
     function Is_Empty (Sgf : in T_SGF) return boolean is
       
