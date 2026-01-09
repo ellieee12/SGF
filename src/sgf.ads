@@ -11,11 +11,11 @@ private
         record
             Name : String;
             Size: Integer;
-            isDirectory : Boolean;
+            IsDirectory : Boolean;
             Child : T_Pointer_Noeud;
             Parent : T_Pointer_Noeud;
-            next : T_Pointer_Noeud;
-            before : T_Pointer_Noeud;
+            Next : T_Pointer_Noeud;
+            Before : T_Pointer_Noeud;
         end record;
     type T_Pointer_Noeud is access T_Noeud;
     
