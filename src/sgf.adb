@@ -16,6 +16,9 @@ package body sgf is
         temp_node : T_Pointer_Node;
         start : Positive;
     begin
+        if path = "/" then
+            return SGF.root;
+        end if;
         if path(path'First) = '/' then
             temp_node := SGF.Root;
             start := path'First + 1;
@@ -28,14 +31,10 @@ package body sgf is
         if temp_node = Null then
             raise Dir_Not_Found with "The path contain an unknown directory !";
         end if;
-        for I in start .. path'Last loop
-            if path (I) = '/' or else I = path'Last then
+        for I in start .. path'Last + 1 loop
+            if path (I) = '/' or else I = path'Last + 1 then
                 declare
-                    if path (I) = '/' then
-                        part : constant String := Path (Start .. I - 1);
-                    else
-                        part : constant String := Path (Start .. I);
-                    end if;
+                    part : constant String := Path (Start .. I - 1);
                 begin
                     if part = ".." then
                         if temp_node.all.Parent /= Null then
