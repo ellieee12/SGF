@@ -8,6 +8,7 @@ package body sgf is
     procedure Current_Directory(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
         start : Positive;
+        part: String;
     begin
         if path(path'First) = '/' then
             temp_node := SGF.Root.all.Child;
