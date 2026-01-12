@@ -64,12 +64,15 @@ private
     Not_A_Dir : exception;
     File_Exists_Error : exception;
     File_Name_Is_Directory_Error : exception;
-   
+    Directory_Exists_Error : exception;
+    
     procedure Validate_Name (Name : in String);
     function Glob_To_Regex (Pattern : String) return String;
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node;
     
     procedure Verify_File_Name_Existence (Current_Node : in T_Pointer_Node; 
+                                          Name : in String);
+    procedure Verify_Directory_Name_Existence (Current_Node : in T_Pointer_Node; 
                                           Name : in String);
   
 end sgf;

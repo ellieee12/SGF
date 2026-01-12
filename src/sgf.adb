@@ -55,6 +55,7 @@ package body sgf is
                         if temp_node.all.Parent /= Null then
                             temp_node := temp_node.all.Parent;
                         end if;
+                        
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
                         if (for some C of part => C = '*' or else C = '?') then
@@ -63,12 +64,15 @@ package body sgf is
                                 temp_node := temp_node.all.Next;
                             end loop;
                         else
-                            while temp_node /= Null and then temp_node.all.Name /= part loop
+                            --  put_line("part:"&part);
+                            --  put_line("node name :"&temp_node.all.Name);
+                            while temp_node /= Null and then SU.To_String(temp_node.all.Name) /= part loop
                                 temp_node := temp_node.all.Next;
                             end loop;
                         end if;
                         if temp_node = Null then
-                            raise Dir_Not_Found with "The path contain an unknown directory !";
+                            put("here");
+                            raise Dir_Not_Found with "The path contains an unknown directory!";
                         end if;
                     end if;
                     start := I + 2;
@@ -264,7 +268,7 @@ package body sgf is
                        Going => Ada.Strings.Backward);
         -- if path name does not contain "/" then we create the a file in the current directory
         if K = 0 then
-            head:=Sgf.Current.all.Child;
+            head:=Sgf.Current;
             Target_Path := SU.To_Unbounded_String("");
             Name := Path_Unbounded;
         else
@@ -281,13 +285,12 @@ package body sgf is
             end if;
             Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
             Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
-            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path)).all.Child;
+            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
         end if;
         -- get node of the target directory
         
         -- verify that the file name is does not exists in the directory
         -- if file name exists, verify that it is not a directory 
-        
         Verify_File_Name_Existence(head,SU.To_String(Name));
         
         -- validate file name
@@ -295,15 +298,17 @@ package body sgf is
         
         -- create file
         new_node := new T_Node'(Name,Size,False,null,head,null,null);
-        tail := head;
-        if tail = null then 
-            sgf.Current.all.Child := new_node;
+        tail := Head.all.Child;
+
+        if tail = null then
+            Head.all.Child := new_node;
         else
             while tail.all.Next /= null loop
                 tail := tail.all.Next;
             end loop;
-            tail.all.next := new_node;
-            new_node.all.Before := Tail;
+
+            tail.all.Next := new_node;
+            new_node.all.Before := tail;
         end if;
     end Create_File;
     
@@ -329,26 +334,106 @@ package body sgf is
     end Verify_File_Name_Existence;
       
     procedure Create_Directory (Sgf : in  out T_SGF;
-                                                  Path: in String) is
+                                Path: in String) is
         Negative_Size_Error, Empty_Name_Error: Exception;
         current_child, new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
+        Name,Target_Path,Path_Unbounded : Unbounded_String;
+        L, K : Integer;
     begin
-        Validate_Name(Name);
-        new_node := new T_Node'(SU.To_Unbounded_String(Name),0,True,null,Sgf.Current,null,null);
-        head:=Sgf.Current.all.Child;
-        tail := head;
-        if tail = null then 
-            sgf.Current.all.Child := new_node;
+        Path_Unbounded := SU.To_Unbounded_String(Path);
+        -- extract directory name
+        L := Path'Length;
+        -- TODO : manage empty path
+        K := SU.Index (Source => Path_Unbounded,
+                       Pattern => "/",
+                       From => L,
+                       Going => Ada.Strings.Backward);
+        -- if path name does not contain "/" then we create the a directory in the current directory
+        if K = 0 then
+            head:=Sgf.Current;
+            Target_Path := SU.To_Unbounded_String("");
+            Name := Path_Unbounded;
+        else
+            if SU.Element(Path_Unbounded,L)  = '/' then
+                K := Index (Source =>Path_Unbounded,
+                            Pattern => "/",
+                            From => L-1,
+                            Going => Ada.Strings.Backward);
+            else
+                K := Index (Source => Path_Unbounded,
+                            Pattern => "/",
+                            From => L,
+                            Going => Ada.Strings.Backward);
+            end if;
+            Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
+            Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
+            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
+        end if;
+        
+        
+        if Head = null then
+            raise Program_Error; -- parent directory does not exist
+        end if;
+
+        new_node := new T_Node'(
+                                Name,
+                                0,
+                                True,
+                                null,
+                                Head,
+                                null,
+                                null
+                               );
+
+        tail := Head.all.Child;
+
+        if tail = null then
+            Head.all.Child := new_node;
         else
             while tail.all.Next /= null loop
                 tail := tail.all.Next;
             end loop;
-            tail.all.next := new_node;
-            new_node.all.Before := Tail;
+
+            tail.all.Next := new_node;
+            new_node.all.Before := tail;
         end if;
+
+        -- verify that the directory name is does not exists in the directory
+        --  Verify_Directory_Name_Existence(head,SU.To_String(Name));
+        --  Validate_Name(SU.To_String(Name));
+        --  new_node := new T_Node'(Name,0,True,null,head,null,null);
+        --  
+        --  tail := head;
+        --  if tail = null then
+        --      --  sgf.Current.all.Child := new_node;
+        --      head := new T_Node'(Name,0,True,null,head,null,null);
+        --  else
+        --      while tail.all.Next /= null loop
+        --          tail := tail.all.Next;
+        --      end loop;
+        --      tail.all.next := new_node;
+        --      new_node.all.Before := Tail;
+        --  end if;
         --TODO : exception handling
-    end Create_Directory_Current_Directory ;
+    end Create_Directory;
+    
+    procedure Verify_Directory_Name_Existence (Current_Node : in T_Pointer_Node; 
+                                               Name : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        
+        if Current_Node /= null then
+            temp_node := Current_Node;
+            while temp_node /= null loop
+                if temp_node.all.Name = Name and temp_node.all.IsDirectory then
+                    raise Directory_Exists_Error;
+                else
+                    temp_node := temp_node.all.Next;
+                end if;
+            end loop;
+        end if;
+    end Verify_Directory_Name_Existence;
    
     procedure Validate_Name (Name : in String) is
       
