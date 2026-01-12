@@ -32,6 +32,8 @@ package sgf is
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
     procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
+    
+    procedure Copy(SGF : in out T_SGF; path : in String; new_path : in String);
 
 private
     type T_Node;
@@ -62,6 +64,7 @@ private
     Empty_Path : exception;
     Dir_Not_Found : exception;
     Not_A_Dir : exception;
+    Not_A_File : exception;
     File_Exists_Error : exception;
     File_Name_Is_Directory_Error : exception;
     Directory_Exists_Error : exception;
