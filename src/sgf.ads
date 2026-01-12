@@ -11,12 +11,12 @@ package sgf is
    
     function Get_Current_Directory(Sgf : in T_SGF) return String;
    
-    procedure Create_File_Current_Directory (Sgf : in  out T_SGF;
-                                             Name : in String;
-                                             Size : in Integer);
+    procedure Create_File(Sgf : in  out T_SGF;
+                          Path : in String;
+                          Size : in Integer);
    
-    procedure Create_Directory_Current_Directory (Sgf : in  out T_SGF;
-                                             Name : in String);
+    procedure Create_Directory(Sgf : in  out T_SGF;
+                                             Path : in String);
     
 
     procedure Current_Directory(SGF : in out T_SGF; path : in String);
@@ -62,9 +62,14 @@ private
     Empty_Path : exception;
     Dir_Not_Found : exception;
     Not_A_Dir : exception;
+    File_Exists_Error : exception;
+    File_Name_Is_Directory_Error : exception;
    
     procedure Validate_Name (Name : in String);
     function Glob_To_Regex (Pattern : String) return String;
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node;
+    
+    procedure Verify_File_Name_Existence (Current_Node : in T_Pointer_Node; 
+                                          Name : in String);
   
 end sgf;
