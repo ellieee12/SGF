@@ -19,7 +19,9 @@ procedure test_sgf is
         
         pragma Assert(not Is_Empty(Sgf));
         List_Files_Recursive(Sgf);
-        put_line(Get_Current_Directory(Sgf));
+        
+        Current_Directory(Sgf, "/Dir1");
+        Put_line(Get_Current_Directory(Sgf));
     end test_ex;
 begin
     test_ex(Sgf);
