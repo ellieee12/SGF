@@ -1,6 +1,4 @@
-with GNAT.RegExp; use GNAT.RegExp;
 with GNAT.RegPat; use GNAT.RegPat;
-with GNAT.Spitbol; use GNAT.Spitbol;
 with Ada.Text_IO;          use Ada.Text_IO;
 with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
@@ -13,9 +11,29 @@ package body sgf is
     procedure Free is
             new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
     
+    function Glob_To_Regex (Pattern : String) return String is
+        Result : Unbounded_String := SU.To_Unbounded_String("^");
+    begin
+        for C of Pattern loop
+            case C is
+            when '*' =>
+                Result := Result & ".*";
+            when '?' =>
+                Result := Result & ".";
+            when '.' | '+' | '(' | ')' | '[' | ']' | '^' | '$' | '\' =>
+                Result := Result & '\' & C;
+            when others =>
+                Result := Result & C;
+            end case;
+        end loop;
+
+        return SU.To_String(Result) & "$";
+    end Glob_To_Regex;
+    
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
+        regex : Regexp;
     begin
         if path = "" then
             raise Empty_Path with "The path provided is empty !";
@@ -38,9 +56,16 @@ package body sgf is
                         end if;
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        while temp_node /= Null and then temp_node.all.Name /= part loop
-                            temp_node := temp_node.all.Next;
-                        end loop;
+                        if (for some C of part => C = '*' or else C = '?') then
+                            regex := Compile(Glob_To_Regex(part));
+                            while temp_node /= Null and then Match(SU.To_String(temp_node.all.Name), regex) loop
+                                temp_node := temp_node.all.Next;
+                            end loop;
+                        else
+                            while temp_node /= Null and then temp_node.all.Name /= part loop
+                                temp_node := temp_node.all.Next;
+                            end loop;
+                        end if;
                         if temp_node = Null then
                             raise Dir_Not_Found with "The path contain an unknown directory !";
                         end if;
