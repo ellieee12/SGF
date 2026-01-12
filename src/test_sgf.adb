@@ -7,36 +7,26 @@ procedure test_sgf is
         
     begin
         Initialize(Sgf);
-        Create_Directory_Current_Directory(Sgf,"home");
-        Current_Directory(Sgf,"home");
-        Create_Directory_Current_Directory(Sgf,"user1");
-        Current_Directory(Sgf,"user1");
-        Create_Directory_Current_Directory(Sgf,"projet");
-        Current_Directory(Sgf,"projet");
-        Create_File(Sgf,"/home/user1/projet/exemple.adb",10);
-        put_line(Get_Current_Directory(Sgf));
-        List_Files(sgf,"./");
+        Create_Directory(Sgf,"home");
+        Create_Directory(Sgf,"/home/user1");
+
+        Create_Directory(Sgf,"/home/user1/pim");
+        Create_Directory(Sgf,"/home/user1/pim/projet");
+        Create_File(Sgf,"/home/user1/pim/projet/exemple.adb",10);
+
+        Create_Directory(Sgf,"/home/user1/pim/tp");
+        Create_Directory(Sgf,"/home/user1/pim/tp/tp1");
+        Create_File(Sgf,"/home/user1/pim/tp/tp1/min_max_serie.adb",10);
+        Create_File(Sgf,"/home/user1/pim/tp/tp1/min_max_serie.py",10);
+        Create_File(Sgf,"/home/user1/pim/tp/tp1/newton.adb",10);
+        Create_File(Sgf,"/home/user1/pim/tp/tp1/puissance.adb",10);
+       
+        Current_Directory(Sgf,"/home/user1/pim/tp/tp1");
+        List_Files_Recursive(sgf,"./");
         
         
     end Construct_SGF_Example;
-    procedure test_ex (Sgf : out T_SGF) is
-      
-    begin
-        Initialize(Sgf);
-        Create_File(Sgf,"Test1",12);
-        Create_File(Sgf,"Test2",12);
-        Create_File(Sgf,"Test3",12);
-        
-        Create_Directory_Current_Directory(Sgf,"Dir1");
-        List_Files(sgf,"./");
-        Current_Directory(Sgf,"/Dir1");
-        Create_Directory_Current_Directory(Sgf,"Dir2");
-        Current_Directory(Sgf,"Dir2");
-        put_line(Get_Current_Directory(sgf));
-        pragma Assert(not Is_Empty(Sgf));
-        List_Files_Recursive(Sgf);
-        put_line(Get_Current_Directory(Sgf));
-    end test_ex;
+    
 begin
     Construct_SGF_Example(Sgf);
 end test_sgf;
