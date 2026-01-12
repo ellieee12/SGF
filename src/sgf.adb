@@ -56,7 +56,7 @@ package body sgf is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.IsDirectory then
+        if not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         end if;
         SGF.Current := temp_node;
@@ -66,7 +66,7 @@ package body sgf is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.IsDirectory then
+        if not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         end if;
         temp_node := temp_node.all.Child;
@@ -96,11 +96,7 @@ package body sgf is
     procedure List_Files_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node) is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := node;
-        if not temp_node.all.IsDirectory then
-            raise Not_A_Dir with "File is not a directory !";
-        end if;
-        temp_node := temp_node.all.Child;
+        temp_node := node.all.Child;
         while temp_node /= null loop
             Put_Line(temp_node.all.Name);
             if temp_node.all.Child /= Null then
@@ -122,23 +118,11 @@ package body sgf is
         Free(temp_node);
     end Remove;
     
-    procedure Remove(SGF : in out T_SGF; node : in T_Pointer_Node) is
-        temp_node : T_Pointer_Node;
-    begin
-        temp_node := node;
-        if temp_node.all.Before /= Null then
-            temp_node.all.Before.Next := temp_node.Next;
-        else
-            temp_node.all.Parent.Child := temp_node.Next;
-        end if;
-        Free(temp_node);
-    end Remove;
-    
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.IsDirectory then
+        if not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         end if;
         if temp_node.all.Before /= Null then
@@ -146,10 +130,12 @@ package body sgf is
         else
             temp_node.all.Parent.Child := temp_node.Next;
         end if;
-        if temp_node.all.Child.all.IsDirectory then
-            Remove_Recursive(SGF, temp_node.all.Child);
-        else
-            Remove(SGF, temp_node.all.Child);
+        if temp_node.all.Child /= Null then
+            temp_node := temp_node.all.Child;
+            while temp_node /= null loop
+                Remove_Recursive(SGF, temp_node);
+                temp_node := temp_node.all.Next;
+            end loop;
         end if;
         Free(temp_node);
     end Remove_Recursive;
@@ -158,18 +144,12 @@ package body sgf is
         temp_node : T_Pointer_Node;
     begin
         temp_node := node;
-        if not temp_node.IsDirectory then
-            raise Not_A_Dir with "File is not a directory !";
-        end if;
-        if temp_node.all.Before /= Null then
-            temp_node.all.Before.Next := temp_node.Next;
-        else
-            temp_node.all.Parent.Child := temp_node.Next;
-        end if;
-        if temp_node.all.Child.all.IsDirectory then
-            Remove_Recursive(SGF, temp_node.all.Child);
-        else
-            Remove(SGF, temp_node.all.Child);
+        if temp_node.all.Child /= Null then
+            temp_node := temp_node.all.Child;
+            while temp_node /= null loop
+                Remove_Recursive(SGF, temp_node);
+                temp_node := temp_node.all.Next;
+            end loop;
         end if;
         Free(temp_node);
     end Remove_Recursive;

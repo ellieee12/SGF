@@ -26,7 +26,6 @@ package sgf is
     procedure List_Files_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
     procedure Remove(SGF : in out T_SGF; path : in String);
-    procedure Remove(SGF : in out T_SGF; node : in T_Pointer_Node);
     
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String);
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);

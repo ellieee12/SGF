@@ -13,14 +13,21 @@ procedure test_sgf is
         Create_Directory_Current_Directory(Sgf,"Dir1");
         Current_Directory(Sgf, "/Dir1");
         Create_File_Current_Directory(Sgf,"Test4",12);
+        Create_Directory_Current_Directory(Sgf,"Dir2");
+        Current_Directory(Sgf, "./Dir2");
         Create_File_Current_Directory(Sgf,"Test5",12);
-        Remove(Sgf,"Test4");
-        Current_Directory(Sgf, "/");
+        Create_File_Current_Directory(Sgf,"Test6",12);
+        Create_Directory_Current_Directory(Sgf,"Dir3");
         
-        pragma Assert(not Is_Empty(Sgf));
+        
+        Current_Directory(Sgf, "/");
+        List_Files_Recursive(Sgf);
+        Remove_Recursive(Sgf,"/Dir1");
+        New_Line;
         List_Files_Recursive(Sgf);
         
-        Current_Directory(Sgf, "/Dir1");
+        pragma Assert(not Is_Empty(Sgf));
+        
         Put_line(Get_Current_Directory(Sgf));
     end test_ex;
 begin
