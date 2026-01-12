@@ -4,6 +4,7 @@ with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
+with Ada.Strings.Fixed.Index
 
 package body sgf is
     package SU renames Ada.Strings.Unbounded;
@@ -178,6 +179,38 @@ package body sgf is
         end if;
         Free(temp_node);
     end Remove_Recursive;
+    
+    procedure Move(SGF : in out T_SGF; path : in String; new_path : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        if temp_node.all.Before /= Null then
+            temp_node.all.Before.Next := temp_node.Next;
+        else
+            temp_node.all.Parent.Child := temp_node.Next;
+        end if;
+        declare
+            P : constant Natural := Index (new_path, "/", Going => Backward);
+            new_node  : T_Pointer_Node;
+        begin
+            if P = 0 then
+                temp_node.all.Name := new_path;
+            elsif P /= new_path'Last then
+                new_node := Get_Node_From_Path(SGF, new_path(new_path'First .. P - 1)).all.Child;
+                while new_node.all.Next /= Null then
+                    new_node := new_node.all.Next;
+                end loop;
+                new_node.next := temp_node;
+                temp_node.all.Name := new_path(P + 1 .. new_path'Last);
+            else
+                new_node := Get_Node_From_Path(SGF, new_path).all.Child;
+                while new_node.all.Next /= Null then
+                    new_node := new_node.all.Next;
+                end loop;
+                new_node.next := temp_node;
+            end if;
+        end;
+    end Move;
 
 
     function Is_Empty (Sgf : in T_SGF) return boolean is
