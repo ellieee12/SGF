@@ -1,11 +1,8 @@
 *.xml
-obj/gpsauto.cgpr
-\#*.adb\#
+.\#*.adb\#
 *.o
 *.ali
 *.stdout
 *.stderr
 *.cgpr
-*.cgpr
-*.xml
-obj/b__test_sgf.ads
+obj/*

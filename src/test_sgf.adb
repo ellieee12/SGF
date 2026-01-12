@@ -13,6 +13,7 @@ procedure test_sgf is
         Create_Directory_Current_Directory(Sgf,"Dir1");
         put_line(Get_Current_Directory(sgf));
         pragma Assert(not Is_Empty(Sgf));
+        List_Files_Recursive(Sgf);
         put_line(Get_Current_Directory(Sgf));
     end test_ex;
 begin
