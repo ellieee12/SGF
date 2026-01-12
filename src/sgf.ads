@@ -24,6 +24,8 @@ package sgf is
     procedure List_Files_Recursive(SGF : in out T_SGF; path : in String := ".");
     
     procedure Remove(SGF : in out T_SGF; path : in String);
+    
+    procedure Remove_Recursive(SGF : in out T_SGF; path : in String);
 
 private
     type T_Node;
@@ -51,7 +53,7 @@ private
     Forbidden_Character_Error : exception;
     Dot_Name_Error : exception;
     Empty_Name_Error : exception;
-    Incorect_Path_Format : exception;
+    Empty_Path : exception;
     Dir_Not_Found : exception;
     Not_A_Dir : exception;
    

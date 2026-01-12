@@ -17,17 +17,18 @@ package body sgf is
         temp_node : T_Pointer_Node;
         start : Positive;
     begin
+        if path = "" then
+            raise Empty_Path with "The path provided is empty !";
+        end if;
         if path(path'First) = '/' then
             temp_node := SGF.Root;
             start := path'First + 1;
-        elsif path(path'First) = '.' then
+        else
             temp_node := SGF.Current;
             start := path'First;
-        else
-            raise Incorect_Path_Format with "The path given is incorrect !";
         end if;
         for I in start .. path'Last loop
-            if (I = path'Last and path(I) = '/') or else path(I+1) = '/' then
+            if (I = path'Last and path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
                 declare
                     part : constant String := path(Start .. I);
                 begin
@@ -96,13 +97,26 @@ package body sgf is
     
     procedure Remove(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
-        
     begin
         temp_node := Get_Node_From_Path(SGF, path);
-        while temp_node /= null loop
-            Put_Line(temp_node.Name);
-            temp_node := temp_node.all.Next;
-        end loop;
+        if temp_node.all.Before /= Null then
+            temp_node.all.Before.Next := temp_node.Next;
+        else
+            temp_node.all.Parent.Child := temp_node.Next;
+        end if;
+        Free(temp_node);
+    end Remove;
+    
+    procedure Remove_Recursive(SGF : in out T_SGF; path : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        if temp_node.all.Before /= Null then
+            temp_node.all.Before.Next := temp_node.Next;
+        else
+            temp_node.all.Parent.Child := temp_node.Next;
+        end if;
+        Free(temp_node);
     end Remove;
 
 

@@ -13,6 +13,8 @@ procedure test_sgf is
         Create_Directory_Current_Directory(Sgf,"Dir1");
         Current_Directory(Sgf, "/Dir1");
         Create_File_Current_Directory(Sgf,"Test4",12);
+        Create_File_Current_Directory(Sgf,"Test5",12);
+        Remove(Sgf,"Test4");
         Current_Directory(Sgf, "/");
         
         pragma Assert(not Is_Empty(Sgf));
