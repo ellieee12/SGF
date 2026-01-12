@@ -41,7 +41,7 @@ package body sgf is
                             temp_node := temp_node.all.Parent;
                         end if;
                     elsif part /= "." then
-                        temp_node := temp_node.all.Child
+                        temp_node := temp_node.all.Child;
                         while temp_node /= Null and then Temp_Node.Name /= part loop
                             temp_node := temp_node.all.Next;
                         end loop;

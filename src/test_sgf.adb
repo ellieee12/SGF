@@ -11,7 +11,7 @@ procedure test_sgf is
         Create_File_Current_Directory(Sgf,"Test2",12);
         Create_File_Current_Directory(Sgf,"Test3",12);
         Create_Directory_Current_Directory(Sgf,"Dir1");
-        
+        put_line(Get_Current_Directory(sgf));
         pragma Assert(not Is_Empty(Sgf));
         put_line(Get_Current_Directory(Sgf));
     end test_ex;
