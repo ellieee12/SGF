@@ -40,7 +40,10 @@ package sgf is
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
     --procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
-
+    Directory_Exists_Error : exception;
+    Control_Character_Error : exception;
+    Forbidden_Character_Error : exception;
+    Dot_Name_Error : exception;
 private
     type T_Node;
     type T_Pointer_Node is access T_Node;
@@ -63,16 +66,16 @@ private
         end record;
    
    
-    Control_Character_Error : exception;
-    Forbidden_Character_Error : exception;
-    Dot_Name_Error : exception;
+    --  Control_Character_Error : exception;
+    --  Forbidden_Character_Error : exception;
+    --  Dot_Name_Error : exception;
     Empty_Name_Error : exception;
     Empty_Path : exception;
     Dir_Not_Found : exception;
     Not_A_Dir : exception;
     File_Exists_Error : exception;
     File_Name_Is_Directory_Error : exception;
-    Directory_Exists_Error : exception;
+    
     
     procedure Validate_Name (Name : in String);
     function Glob_To_Regex (Pattern : String) return String;

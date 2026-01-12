@@ -358,30 +358,25 @@ package body sgf is
                             Pattern => "/",
                             From => L-1,
                             Going => Ada.Strings.Backward);
+                Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L-1));
             else
                 K := Index (Source => Path_Unbounded,
                             Pattern => "/",
                             From => L,
                             Going => Ada.Strings.Backward);
+                Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
             end if;
             Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
-            Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
+            
             if Target_Path = "" then
                 head:=Sgf.Current;
             else
                 Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
             end if;
         end if;
-
-        new_node := new T_Node'(
-                                Name,
-                                0,
-                                True,
-                                null,
-                                Head,
-                                null,
-                                null
-                               );
+        Verify_Directory_Name_Existence(head.all.Child,SU.To_String(Name));
+        Validate_Name(SU.To_String(Name));
+        new_node := new T_Node'(Name,0,True,null,Head,null,null);
 
         tail := Head.all.Child;
 
@@ -396,22 +391,6 @@ package body sgf is
             new_node.all.Before := tail;
         end if;
 
-        -- verify that the directory name is does not exists in the directory
-        --  Verify_Directory_Name_Existence(head,SU.To_String(Name));
-        --  Validate_Name(SU.To_String(Name));
-        --  new_node := new T_Node'(Name,0,True,null,head,null,null);
-        --  
-        --  tail := head;
-        --  if tail = null then
-        --      --  sgf.Current.all.Child := new_node;
-        --      head := new T_Node'(Name,0,True,null,head,null,null);
-        --  else
-        --      while tail.all.Next /= null loop
-        --          tail := tail.all.Next;
-        --      end loop;
-        --      tail.all.next := new_node;
-        --      new_node.all.Before := Tail;
-        --  end if;
         --TODO : exception handling
     end Create_Directory;
     

@@ -24,7 +24,7 @@ procedure test_sgf is
         Create_Directory(Sgf,"/usr");
         Create_Directory(Sgf,"/usr/local");
         Create_Directory(Sgf,"/usr/local/share");
-        put(List_Files_Recursive(Sgf,"./"));
+        --  put(List_Files_Recursive(Sgf,"./"));
         
     end Construct_SGF_Example;
     
@@ -56,15 +56,75 @@ procedure test_sgf is
                        & "test2" & ASCII.LF
                        & "test3" & ASCII.LF);
         
-        -- create directory using relative path 
+        -- create directory using relative path (./)
         Create_Directory(Sgf,"relative-path");
         Create_Directory(Sgf,"./relative-path/one-dot");
         Create_Directory(Sgf,"./relative-path/one-dot/1-test1");
         Create_Directory(Sgf,"./relative-path/one-dot/1-test2/");
-        put(List_Files(Sgf,"/relative-path/one-dot/"));
         pragma Assert(List_Files(Sgf,"/relative-path/one-dot/") =
                         "1-test1" & ASCII.LF
-                          & "1-test2" & ASCII.LF);
+                      & "1-test2" & ASCII.LF);
+        
+        -- create directory using relative path (../)
+        
+            
+        Create_Directory(Sgf,"./relative-path/two-dot");
+        Current_Directory(Sgf,"/relative-path/two-dot");
+        Create_Directory(Sgf,"2-test1");
+        Current_Directory(Sgf,"/relative-path/two-dot/2-test1");
+        Create_Directory(Sgf,"../2-test2");
+        Create_Directory(Sgf,"../2-test3/");
+        pragma Assert(List_Files(Sgf,"/relative-path/two-dot/") =
+                        "2-test1" & ASCII.LF
+                      & "2-test2" & ASCII.LF
+                      & "2-test3" & ASCII.LF);
+        
+        Create_Directory(Sgf,"../2-test2/2-test4");
+        pragma Assert(List_Files(Sgf,"/relative-path/two-dot/2-test2/") =
+                        "2-test4" & ASCII.LF);
+        
+        Create_Directory(Sgf,"../../2-test5");
+        pragma Assert(List_Files(Sgf,"/relative-path/") =
+                        "one-dot" & ASCII.LF
+                      & "two-dot" & ASCII.LF
+                      & "2-test5" & ASCII.LF);
+        
+        --TODO : abs path
+        
+        Current_Directory(Sgf,"/");
+        put(List_Files_Recursive(Sgf,"./"));
+        
+        -- TODO: Create a new directory with a name that already exists in the target path
+        declare
+            Directory_Name_Conflict : Boolean := false;
+        begin
+            begin
+                Create_Directory(Sgf,"relative-path");
+            exception
+                when Directory_Exists_Error => Directory_Name_Conflict := True;
+            end;
+            pragma Assert(Directory_Name_Conflict);
+        end;
+        
+        -- Create a new directory with invalid name
+        declare 
+            Name_Is_A_Dot : Boolean := false;
+            Name_Is_Two_Dot : Boolean := false;
+        begin
+            begin
+                Create_Directory(Sgf,".");
+            exception
+                when Dot_Name_Error => Name_Is_A_Dot := True;
+            end;
+            
+            begin
+                Create_Directory(Sgf,"..");
+            exception
+                when Dot_Name_Error => Name_Is_Two_Dot := True;
+            end;
+            pragma Assert(Name_Is_A_Dot);
+            pragma Assert(Name_Is_Two_Dot);
+        end;
         
     end Create_Directory_Test;
 begin
