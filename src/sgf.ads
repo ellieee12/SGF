@@ -4,8 +4,9 @@ package sgf is
 
     type T_SGF is private;
     type T_Pointer_Node is private;
+    
     function Is_Empty (Sgf : in T_SGF) return boolean;
-    --procedure Move(SGF : in out T_SGF; path : in String);
+    
     procedure Initialize (Sgf : out T_SGF);
    
     function Get_Current_Directory(Sgf : in T_SGF) return String;
@@ -30,7 +31,7 @@ package sgf is
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String);
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
-    --procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
+    procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
 
 private
     type T_Node;
