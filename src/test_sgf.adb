@@ -14,7 +14,6 @@ procedure test_sgf is
         Create_Directory_Current_Directory(Sgf,"projet");
         Current_Directory(Sgf,"projet");
         Create_File(Sgf,"/home/user1/projet/exemple.adb",10);
-        Create_File(Sgf,"/home/user1/projet/exemple.adb",10);
         put_line(Get_Current_Directory(Sgf));
         List_Files(sgf,"./");
         

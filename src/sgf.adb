@@ -254,9 +254,7 @@ package body sgf is
         
         -- verify that the file name is does not exists in the directory
         -- if file name exists, verify that it is not a directory 
-        if head = null then
-            put_line(Target_Path);
-        end if;
+        
         Verify_File_Name_Existence(head,SU.To_String(Name));
         
         -- validate file name
@@ -266,10 +264,8 @@ package body sgf is
         new_node := new T_Node'(Name,Size,False,null,head,null,null);
         tail := head;
         if tail = null then 
-            put_line("created");
             sgf.Current.all.Child := new_node;
         else
-            put_line("created what");
             while tail.all.Next /= null loop
                 tail := tail.all.Next;
             end loop;
@@ -284,27 +280,23 @@ package body sgf is
     begin
         
         if Current_Node /= null then
-            temp_node := Current_Node.all.Child;
+            temp_node := Current_Node;
             while temp_node /= null loop
-                put("yes");
                 if temp_node.all.Name = Name then
-                    
                     if temp_node.all.IsDirectory then
-                        
                         raise File_Name_Is_Directory_Error;
                     else
                         raise File_Exists_Error;
                     end if;
                 else
-                    put_line("name not equal");
+                    temp_node := temp_node.all.Next;
                 end if;
-                temp_node := temp_node.all.Next;
             end loop;
         end if;
     end Verify_File_Name_Existence;
       
-    procedure Create_Directory_Current_Directory (Sgf : in  out T_SGF;
-                                                  Name : in String) is
+    procedure Create_Directory (Sgf : in  out T_SGF;
+                                                  Path: in String) is
         Negative_Size_Error, Empty_Name_Error: Exception;
         current_child, new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
