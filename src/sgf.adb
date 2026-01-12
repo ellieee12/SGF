@@ -1,4 +1,4 @@
-with GNAT.RegPat; use GNAT.RegPat;
+with GNAT.RegExp; use GNAT.RegExp;
 with Ada.Text_IO;          use Ada.Text_IO;
 with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
