@@ -116,10 +116,15 @@ package body sgf is
         temp_node : T_Pointer_Node;
         res : Unbounded_String;
     begin
-        res := SU.To_Unbounded_String("/"&ASCII.LF);
+        
         temp_node := Get_Node_From_Path(SGF, path);
         if not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
+        end if;
+        if temp_node.all.Parent=null then
+            res := SU.To_Unbounded_String("/"&ASCII.LF);
+        else
+            res := SU.To_Unbounded_String("");
         end if;
         temp_node := temp_node.all.Child;
         while temp_node /= null loop

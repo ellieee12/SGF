@@ -24,7 +24,7 @@ procedure test_sgf is
         Create_Directory(Sgf,"/usr");
         Create_Directory(Sgf,"/usr/local");
         Create_Directory(Sgf,"/usr/local/share");
-        --  put(List_Files_Recursive(Sgf,"./"));
+        put(List_Files_Recursive(Sgf,"./"));
         
     end Construct_SGF_Example;
     
@@ -94,41 +94,42 @@ procedure test_sgf is
         Current_Directory(Sgf,"/");
         put(List_Files_Recursive(Sgf,"./"));
         
-        -- TODO: Create a new directory with a name that already exists in the target path
-        declare
-            Directory_Name_Conflict : Boolean := false;
-        begin
-            begin
-                Create_Directory(Sgf,"relative-path");
-            exception
-                when Directory_Exists_Error => Directory_Name_Conflict := True;
-            end;
-            pragma Assert(Directory_Name_Conflict);
-        end;
-        
-        -- Create a new directory with invalid name
-        declare 
-            Name_Is_A_Dot : Boolean := false;
-            Name_Is_Two_Dot : Boolean := false;
-        begin
-            begin
-                Create_Directory(Sgf,".");
-            exception
-                when Dot_Name_Error => Name_Is_A_Dot := True;
-            end;
-            
-            begin
-                Create_Directory(Sgf,"..");
-            exception
-                when Dot_Name_Error => Name_Is_Two_Dot := True;
-            end;
-            pragma Assert(Name_Is_A_Dot);
-            pragma Assert(Name_Is_Two_Dot);
-        end;
+        -- TODO: Create a new directory with a name that already exists in the target 
         
     end Create_Directory_Test;
+    
+    procedure Create_Directory_Exception_Test(Sgf : out T_SGF) is
+        Directory_Name_Conflict : Boolean := false;
+        Name_Is_A_Dot : Boolean := false;
+        Name_Is_Two_Dot : Boolean := false;
+    begin
+        begin
+            Create_Directory(Sgf,"relative-path");
+        exception
+            when Directory_Exists_Error => Directory_Name_Conflict := True;
+        end;
+       
+        begin
+            Create_Directory(Sgf,".");
+        exception
+            when Dot_Name_Error => Name_Is_A_Dot := True;
+        end;
+            
+        begin
+            Create_Directory(Sgf,"..");
+        exception
+            when Dot_Name_Error => Name_Is_Two_Dot := True;
+        end;
+            
+        pragma Assert(Directory_Name_Conflict);
+        pragma Assert(Name_Is_A_Dot);
+        pragma Assert(Name_Is_Two_Dot);
+        
+    end Create_Directory_Exception_Test;
+    
 begin
     Get_Current_Working_Directory_Test(Sgf);
-    Create_Directory_Test (Sgf);
+    Create_Directory_Test(Sgf);
+    Create_Directory_Exception_Test(Sgf);
 end test_sgf;
 
