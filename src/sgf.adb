@@ -5,6 +5,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package body sgf is
     package SU renames Ada.Strings.Unbounded;
@@ -92,48 +93,82 @@ package body sgf is
         SGF.Current := temp_node;
     end Current_Directory;
     
-    procedure List_Files(SGF : in out T_SGF; path : in String := ".") is
+    function List_Files(SGF : in out T_SGF; path : in String := ".") return String is
         temp_node : T_Pointer_Node;
+        res : Unbounded_String;
     begin
+        res := SU.To_Unbounded_String("");
         temp_node := Get_Node_From_Path(SGF, path);
         if not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         end if;
         temp_node := temp_node.all.Child;
         while temp_node /= null loop
-            Put_Line(temp_node.all.Name);
+            res := res & temp_node.all.Name ;
+            append(res,ASCII.LF);
             temp_node := temp_node.all.Next;
         end loop;
+        return SU.To_String(res);
     end List_Files;
     
-    procedure List_Files_Recursive(SGF : in out T_SGF; path : in String := ".") is
+    function List_Files_Recursive(SGF : in out T_SGF; 
+                                  path : in String := "."
+                                  ) return String is
         temp_node : T_Pointer_Node;
+        res : Unbounded_String;
     begin
+        
         temp_node := Get_Node_From_Path(SGF, path);
         if not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         end if;
+        if temp_node.all.Parent=null then
+            res := SU.To_Unbounded_String("/"&ASCII.LF);
+        else
+            res := SU.To_Unbounded_String("");
+        end if;
         temp_node := temp_node.all.Child;
         while temp_node /= null loop
-            Put_Line(temp_node.all.Name);
+            if temp_node.all.IsDirectory then
+                res :=  res & "\-- " & temp_node.all.Name&ASCII.LF;
+            else
+                res :=  res & "|-- " & temp_node.all.Name & ASCII.LF;
+            end if;
             if temp_node.all.Child /= Null then
-                List_Files_Recursive(SGF, temp_node);
+                res := res & List_Files_Recursive(SGF, temp_node, res, 1);
             end if;
             temp_node := temp_node.all.Next;
         end loop;
+        return SU.To_String(res);
     end List_Files_Recursive;
     
-    procedure List_Files_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node) is
+    function List_Files_Recursive(SGF : in out T_SGF; 
+                                  node : in T_Pointer_Node; 
+                                  res : in Unbounded_String;
+                                  level : in Natural) return Unbounded_String is
         temp_node : T_Pointer_Node;
+        temp_res : Unbounded_String;
+        Indent : constant String := (1 .. Level * 4 => ' ');
     begin
         temp_node := node.all.Child;
         while temp_node /= null loop
-            Put_Line(temp_node.all.Name);
+            if temp_node.all.IsDirectory then
+                temp_res := temp_res 
+                  & SU.To_Unbounded_String (Indent & "\-- ") 
+                  & temp_node.all.Name 
+                  & ASCII.LF;
+            else 
+                temp_res := temp_res 
+                  & SU.To_Unbounded_String (Indent & "|-- ") 
+                  & temp_node.all.Name 
+                  & ASCII.LF;
+            end if;
             if temp_node.all.Child /= Null then
-                List_Files_Recursive(SGF, temp_node);
+                temp_res := temp_res & List_Files_Recursive(SGF, temp_node,temp_res,level + 1);
             end if;
             temp_node := temp_node.all.Next;
         end loop;
+        return temp_res;
     end List_Files_Recursive;
     
     procedure Remove(SGF : in out T_SGF; path : in String) is
@@ -242,10 +277,11 @@ package body sgf is
     end Copy;
 
 
-    function Is_Empty (Sgf : in T_SGF) return boolean is
-      
+    function Is_Empty (Sgf : in out T_SGF; Path : in String) return boolean is
+        temp_node : T_Pointer_Node;
     begin
-        return Sgf.Current/=null;
+        temp_node := Get_Node_From_Path(Sgf,Path);
+        return temp_node.all.Child/=null;
     end Is_Empty;
    
     procedure Initialize (Sgf : out T_SGF) is 
@@ -385,31 +421,25 @@ package body sgf is
                             Pattern => "/",
                             From => L-1,
                             Going => Ada.Strings.Backward);
+                Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L-1));
             else
                 K := Index (Source => Path_Unbounded,
                             Pattern => "/",
                             From => L,
                             Going => Ada.Strings.Backward);
+                Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
             end if;
             Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
-            Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
-            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
+            
+            if Target_Path = "" then
+                head:=Sgf.Current;
+            else
+                Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
+            end if;
         end if;
-        
-        
-        if Head = null then
-            raise Program_Error; -- parent directory does not exist
-        end if;
-
-        new_node := new T_Node'(
-                                Name,
-                                0,
-                                True,
-                                null,
-                                Head,
-                                null,
-                                null
-                               );
+        Verify_Directory_Name_Existence(head.all.Child,SU.To_String(Name));
+        Validate_Name(SU.To_String(Name));
+        new_node := new T_Node'(Name,0,True,null,Head,null,null);
 
         tail := Head.all.Child;
 
@@ -424,22 +454,6 @@ package body sgf is
             new_node.all.Before := tail;
         end if;
 
-        -- verify that the directory name is does not exists in the directory
-        --  Verify_Directory_Name_Existence(head,SU.To_String(Name));
-        --  Validate_Name(SU.To_String(Name));
-        --  new_node := new T_Node'(Name,0,True,null,head,null,null);
-        --  
-        --  tail := head;
-        --  if tail = null then
-        --      --  sgf.Current.all.Child := new_node;
-        --      head := new T_Node'(Name,0,True,null,head,null,null);
-        --  else
-        --      while tail.all.Next /= null loop
-        --          tail := tail.all.Next;
-        --      end loop;
-        --      tail.all.next := new_node;
-        --      new_node.all.Before := Tail;
-        --  end if;
         --TODO : exception handling
     end Create_Directory;
     
