@@ -4,6 +4,7 @@ with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package body sgf is
@@ -217,6 +218,63 @@ package body sgf is
         end if;
         Free(temp_node);
     end Remove_Recursive;
+    
+    procedure Move(SGF : in out T_SGF; path : in String; new_path : in String) is
+        temp_node, new_node : T_Pointer_Node;
+        P : constant Natural := Index (new_path, "/", Going => Ada.Strings.Backward);
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        if temp_node.all.IsDirectory then
+            raise Not_A_File with "Directory is not a file !";
+        end if;
+        if temp_node.all.Before /= Null then
+            temp_node.all.Before.Next := temp_node.Next;
+        else
+            temp_node.all.Parent.Child := temp_node.Next;
+        end if;
+        if P = 0 then
+            temp_node.all.Name := SU.To_Unbounded_String(new_path);
+        elsif P /= new_path'Last then
+            temp_node.all.Name := SU.To_Unbounded_String(new_path(P + 1 .. new_path'Last));
+            new_node := Get_Node_From_Path(SGF, new_path(new_path'First .. P - 1));
+            if not new_node.all.IsDirectory then
+                raise Not_A_Dir with "File is not a directory !";
+            end if;
+            new_node := new_node.all.Child;
+            while new_node.all.Next /= Null loop
+                new_node := new_node.all.Next;
+            end loop;
+            new_node.Next := temp_node;
+        else
+            new_node := Get_Node_From_Path(SGF, new_path);
+            if not new_node.all. IsDirectory then
+                raise Not_A_Dir with "File is not a directory !";
+            end if;
+            new_node := new_node.all.Child;
+            while new_node.all.Next /= Null loop
+                new_node := new_node.all.Next;
+            end loop;
+            new_node.Next := temp_node;
+        end if;
+    end Move;
+    
+    procedure Copy(SGF : in out T_SGF; path : in String; new_path : in String) is
+        temp_node, new_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path);
+        if temp_node.all. IsDirectory then
+            raise Not_A_File with "Directory is not a file !";
+        end if;
+        new_node := Get_Node_From_Path(SGF, new_path);
+        if not new_node.all. IsDirectory then
+            raise Not_A_Dir with "File is not a directory !";
+        end if;
+        new_node := new_node.all.Child;
+        while new_node.all.Next /= Null loop
+            new_node := new_node.all.Next;
+        end loop;
+        new_node.next := new T_Node'(temp_node.all.Name, temp_node.all.Size, temp_node.all.IsDirectory, Null, Null, Null, new_node);
+    end Copy;
 
 
     function Is_Empty (Sgf : in out T_SGF; Path : in String) return boolean is

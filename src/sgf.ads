@@ -37,20 +37,17 @@ package sgf is
     
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String);
     
-    
-<<<<<<< Updated upstream
-    --procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
-=======
+
     procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
     
     procedure Copy(SGF : in out T_SGF; path : in String; new_path : in String);
 
     procedure Archive_Directory (Sgf : in out T_SGF;
                                  Path : in String);
-    function Get_Size (Sgf : in T_SGF, Path : in String) return Integer;
-    function Get_Name (Sgf : in T_SGF, Path : in String) return String;
+    function Get_Size (Sgf : in T_SGF ; Path : in String) return Integer;
+    function Get_Name (Sgf : in T_SGF ;  Path : in String) return String;
     
->>>>>>> Stashed changes
+
     Directory_Exists_Error : exception;
     Control_Character_Error : exception;
     Forbidden_Character_Error : exception;
@@ -84,6 +81,7 @@ private
     Empty_Path : exception;
     Dir_Not_Found : exception;
     Not_A_Dir : exception;
+    Not_A_File : exception;
     File_Exists_Error : exception;
     File_Name_Is_Directory_Error : exception;
     
