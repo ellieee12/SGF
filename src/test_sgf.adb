@@ -24,7 +24,9 @@ procedure test_sgf is
         Current_Directory(Sgf,"/home/user1/pim/tp/tp1");
         List_Files_Recursive(sgf,"./");
         
-        
+        New_Line;
+        Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "amongus");
+        List_Files_Recursive(Sgf,"./");
     end Construct_SGF_Example;
     
 begin

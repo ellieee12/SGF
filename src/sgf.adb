@@ -189,7 +189,7 @@ package body sgf is
         P : constant Natural := Index (new_path, "/", Going => Ada.Strings.Backward);
     begin
         temp_node := Get_Node_From_Path(SGF, path);
-        if temp_node.all. IsDirectory then
+        if temp_node.all.IsDirectory then
             raise Not_A_File with "Directory is not a file !";
         end if;
         if temp_node.all.Before /= Null then
@@ -200,16 +200,16 @@ package body sgf is
         if P = 0 then
             temp_node.all.Name := SU.To_Unbounded_String(new_path);
         elsif P /= new_path'Last then
+            temp_node.all.Name := SU.To_Unbounded_String(new_path(P + 1 .. new_path'Last));
             new_node := Get_Node_From_Path(SGF, new_path(new_path'First .. P - 1));
-            if not new_node.all. IsDirectory then
+            if not new_node.all.IsDirectory then
                 raise Not_A_Dir with "File is not a directory !";
             end if;
             new_node := new_node.all.Child;
             while new_node.all.Next /= Null loop
                 new_node := new_node.all.Next;
             end loop;
-            new_node.next := temp_node;
-            temp_node.all.Name := SU.To_Unbounded_String(new_path(P + 1 .. new_path'Last));
+            new_node.Next := temp_node;
         else
             new_node := Get_Node_From_Path(SGF, new_path);
             if not new_node.all. IsDirectory then
@@ -219,7 +219,7 @@ package body sgf is
             while new_node.all.Next /= Null loop
                 new_node := new_node.all.Next;
             end loop;
-            new_node.next := temp_node;
+            new_node.Next := temp_node;
         end if;
     end Move;
     
