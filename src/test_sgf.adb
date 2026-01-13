@@ -66,8 +66,6 @@ procedure test_sgf is
                       & "1-test2" & ASCII.LF);
         
         -- create directory using relative path (../)
-        
-            
         Create_Directory(Sgf,"./relative-path/two-dot");
         Current_Directory(Sgf,"/relative-path/two-dot");
         Create_Directory(Sgf,"2-test1");
@@ -93,8 +91,7 @@ procedure test_sgf is
         
         Current_Directory(Sgf,"/");
         put(List_Files_Recursive(Sgf,"./"));
-        
-        -- TODO: Create a new directory with a name that already exists in the target 
+
         
     end Create_Directory_Test;
     
@@ -103,18 +100,19 @@ procedure test_sgf is
         Name_Is_A_Dot : Boolean := false;
         Name_Is_Two_Dot : Boolean := false;
     begin
+        -- Create a new directory with a name that already exists in the target 
         begin
             Create_Directory(Sgf,"relative-path");
         exception
             when Directory_Exists_Error => Directory_Name_Conflict := True;
         end;
-       
+        -- Create directory with a "." as name
         begin
             Create_Directory(Sgf,".");
         exception
             when Dot_Name_Error => Name_Is_A_Dot := True;
         end;
-            
+        -- Create directory with a ".." as name  
         begin
             Create_Directory(Sgf,"..");
         exception
@@ -127,6 +125,11 @@ procedure test_sgf is
         
     end Create_Directory_Exception_Test;
     
+    procedure Archive_Directory_Test (Sgf :out T_SGF) is
+    
+    begin 
+        Construct_SGF_Example ( 
+    end Archive_Directory_Test;
 begin
     Get_Current_Working_Directory_Test(Sgf);
     Create_Directory_Test(Sgf);

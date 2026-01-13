@@ -112,7 +112,7 @@ package body sgf is
     
     function List_Files_Recursive(SGF : in out T_SGF; 
                                   path : in String := "."
-                                  ) return String is
+                                 ) return String is
         temp_node : T_Pointer_Node;
         res : Unbounded_String;
     begin
@@ -441,4 +441,79 @@ package body sgf is
             end case;
         end loop;
     end Validate_Name;
+    
+    procedure Archive_Directory (Sgf : in out T_SGF;
+                                 Path : in String) is
+        temp_node : T_Pointer_Node;
+        res : Integer;
+        zip_name : Unbounded_String;
+    begin
+        temp_node := Get_Node_From_Path(Sgf,Path);
+        if not temp_node.all.IsDirectory then
+            raise Not_A_Dir with "File is not a directory!";
+        end if;
+        if Path'Length = 0 then
+            raise Empty_Path with "No path name is given!";
+        end if;
+        res := 0;
+        zip_name := temp_node.all.Name & ".tar.gz";
+        temp_node := temp_node.all.Child;
+        while temp_node /= null loop
+            if not temp_node.all.IsDirectory then
+                res := res + temp_node.all.Size;
+            end if;
+            if temp_node.all.Child /= Null then
+                res := res + Archive_Directory_Recursive(Sgf,temp_node,res);
+            end if;
+            temp_node := temp_node.all.Next;
+        end loop;
+        -- create zip file
+        if Path = "." or Path = "./" then
+            Create_File(Sgf,"./" & SU.To_String(zip_name),res);
+        elsif Path(Path'Last) /= '/' then
+            Create_File(Sgf,Path & "/" & SU.To_String(zip_name), res);
+        else
+            Create_File(Sgf,Path & SU.To_String(zip_name), res);
+        end if;
+    end Archive_Directory;
+    
+    function Archive_Directory_Recursive (Sgf : in out T_SGF;
+                                           node : in T_Pointer_Node;
+                                           res : in Integer) return Integer is
+        temp_node : T_Pointer_Node;
+        temp_res : Integer;
+    begin
+        temp_res := 0;
+        temp_node := node.all.Child;
+        while temp_node /= null loop
+            if not temp_node.all.IsDirectory then
+                temp_res := temp_res + temp_node.all.Size;
+            end if;
+            if temp_node.all.Child/=Null then
+                temp_res := temp_res + Archive_Directory_Recursive(Sgf,temp_node,temp_res);
+            end if;
+            temp_node := temp_node.all.Next;
+        end loop;
+        return temp_res;
+    end Archive_Directory_Recursive;
+    
+    function Get_Name (Sgf : in T_SGF, Path : in String) return String is
+        
+    begin
+        return SU.To_String(Get_Node_From_Path(Sgf,Path).all.Name);
+    end Get_Name;
+   
+    function Get_Size (Sgf : in T_SGF, Path : in String) return Integer is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(Sgf,Path);
+        if temp_node.all.IsDirectory then 
+            return 0;
+        else
+            return temp_node.all.Size;
+        end if;
+    end if;
+    end Get_Size;
+    
+    
 end sgf;
