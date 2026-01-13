@@ -24,7 +24,7 @@ package sgf is
                                              Path : in String);
     
     -- Change the current working directory based on a new given (relative and absolute path included)
-    procedure Current_Directory(SGF : in out T_SGF; path : in String);
+    procedure Current_Directory(SGF : in out T_SGF; path : in String := "/");
     
     -- List the files and directories of a directory as indicated by a given path name
     -- If no path name given, list the files and directories of the current working directory

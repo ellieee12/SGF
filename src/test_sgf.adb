@@ -26,6 +26,11 @@ procedure test_sgf is
         Create_Directory(Sgf,"/usr/local/share");
         put(List_Files_Recursive(Sgf,"./"));
         
+        Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "/usr/local/share");
+        Copy(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.py", "/usr/local/share");
+        put(List_Files_Recursive(Sgf,"./"));
+        
+        
     end Construct_SGF_Example;
     
     procedure Get_Current_Working_Directory_Test (Sgf : out T_SGF) is
