@@ -50,6 +50,9 @@ package sgf is
     function Get_Name (Sgf : in out T_SGF ;  Path : in String) return String;
     
 
+    
+    procedure Copy_Recursive(SGF : in out T_SGF; path : in String; new_path : in String);
+    
     Directory_Exists_Error : exception;
     Control_Character_Error : exception;
     Forbidden_Character_Error : exception;
@@ -91,7 +94,7 @@ private
     
     procedure Validate_Name (Name : in String);
     function Glob_To_Regex (Pattern : String) return String;
-    function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node;
+    function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node;
     
     procedure Verify_File_Name_Existence (Current_Node : in T_Pointer_Node; 
                                           Name : in String);
