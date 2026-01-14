@@ -142,12 +142,13 @@ procedure test_sgf is
         pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False)=50);
         put(List_Files_Recursive(Sgf,"./"));
         Remove(Sgf,"/home/user1/pim/projet/home.tar");
-        put(List_Files_Recursive(Sgf,"./"));
+        
         -- archive target save path name not given
         Archive_Directory(Sgf, "/home/home.tar","/home");
         put(List_Files_Recursive(Sgf,"./"));
         pragma Assert(Get_Name(Sgf,"/home/home.tar",False)="home.tar");
         pragma Assert(Get_Size(Sgf,"/home/home.tar",False)=50);
+        Remove(Sgf,"/home/home.tar");
     end Archive_Directory_Test;
 
     

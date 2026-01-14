@@ -37,8 +37,8 @@ package body sgf is
         temp_node : T_Pointer_Node;
         start : Positive;
         regex : Regexp;
+        
     begin
-        put_line("path provided : " & path);
         if path = "" then
             raise Empty_Path with "The path provided is empty !";
         end if;
@@ -52,6 +52,7 @@ package body sgf is
         for I in start .. path'Last loop
             if (I = path'Last and path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
                 declare
+                    tmp : boolean:=false;
                     part : constant String := path(Start .. I);
                 begin
                     if part = ".." then
@@ -79,19 +80,21 @@ package body sgf is
                                     temp_node := temp_node.all.Next;
                                 end loop;
                             else
-                                while temp_node /= Null and then (not temp_node.all.IsDirectory and SU.To_String(temp_node.all.Name) /= part) loop
-                                    put_line("Current name :" &temp_node.all.Name);
-                                    put_line("Current part : " & part);
-                                    temp_node := temp_node.all.Next;
+                                while temp_node /= Null and not tmp loop
+                                    if SU.To_String(temp_node.all.Name) = part then
+                                        if (temp_node.all.IsDirectory and onlyDirectory) or (not temp_node.all.IsDirectory and not onlyDirectory) then
+                                            tmp := true;
+                                        end if;
+                                    else
+                                        temp_node := temp_node.all.Next;
+                                    end if;
+                                    
                                 end loop;
-                                --  put_line("entered");
-                                --  put_line("Current name :" &temp_node.all.Name);
-                                --  put_line("Current part : " & part);
-                                --  if temp_node.all.IsDirectory then
-                                --      put_line("Is a directory");
-                                --  else
-                                --      put_line("not a directory");
-                                --  end if;
+                                
+                                --  while temp_node /= Null and then (not temp_node.all.IsDirectory and then SU.To_String(temp_node.all.Name) /= part) loop
+                                --      temp_node := temp_node.all.Next;
+                                --  end loop;
+                                
                             end if;
                         end if;
                         if temp_node = Null then
@@ -105,7 +108,6 @@ package body sgf is
         if onlyDirectory and not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         elsif not onlyDirectory and temp_node.all.IsDirectory then
-            put_line("Current name :" & temp_node.all.Name);
             raise Not_A_File with "Directory is not a file !";
         end if;
         return temp_node;
@@ -637,7 +639,6 @@ package body sgf is
             end if;
             temp_node := temp_node.all.Next;
         end loop;
-        put_line(SU.To_String(new_path_name) & "/" & SU.To_String(archive_name));
         Create_File(Sgf,SU.To_String(new_path_name) & "/" & SU.To_String(archive_name), res);
     end Archive_Directory;
     
