@@ -93,7 +93,6 @@ private
     
     
     procedure Validate_Name (Name : in String);
-    function Glob_To_Regex (Pattern : String) return String;
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node;
     
     procedure Verify_File_Name_Existence (Current_Node : in T_Pointer_Node; 

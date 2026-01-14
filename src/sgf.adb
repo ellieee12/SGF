@@ -14,30 +14,10 @@ package body sgf is
     procedure Free is
       new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
     
-    function Glob_To_Regex (Pattern : String) return String is
-        Result : Unbounded_String := SU.To_Unbounded_String("^");
-    begin
-        for C of Pattern loop
-            case C is
-            when '*' =>
-                Result := Result & ".*";
-            when '?' =>
-                Result := Result & ".";
-            when '.' | '+' | '(' | ')' | '[' | ']' | '^' | '$' | '\' =>
-                Result := Result & '\' & C;
-            when others =>
-                Result := Result & C;
-            end case;
-        end loop;
-
-        return SU.To_String(Result) & "$";
-    end Glob_To_Regex;
-    
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
         regex : Regexp;
-        
     begin
         if path = "" then
             raise Empty_Path with "The path provided is empty !";
@@ -50,10 +30,10 @@ package body sgf is
             start := path'First;
         end if;
         for I in start .. path'Last loop
-            if (I = path'Last and path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
+            if (I = path'Last and then path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
                 declare
-                    tmp : boolean:=false;
                     part : constant String := path(Start .. I);
+                    has_glob : Constant Boolean := (for some C of part => C = '*' or else C = '?');
                 begin
                     if part = ".." then
                         if temp_node.all.Parent /= Null then
@@ -62,41 +42,14 @@ package body sgf is
                         
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        if I /= path'Last or onlyDirectory then
-                            if (for some C of part => C = '*' or else C = '?') then
-                                regex := Compile(Glob_To_Regex(part));
-                                while temp_node /= Null and then (temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
-                                    temp_node := temp_node.all.Next;
-                                end loop;
-                            else
-                                while temp_node /= Null and then (temp_node.all.IsDirectory and SU.To_String(temp_node.all.Name) /= part) loop
-                                    temp_node := temp_node.all.Next;
-                                end loop;
-                            end if;
-                        elsif I = path'Last then
-                            if (for some C of part => C = '*' or else C = '?') then
-                                regex := Compile(Glob_To_Regex(part));
-                                while temp_node /= Null and then (not temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
-                                    temp_node := temp_node.all.Next;
-                                end loop;
-                            else
-                                while temp_node /= Null and not tmp loop
-                                    if SU.To_String(temp_node.all.Name) = part then
-                                        if (temp_node.all.IsDirectory and onlyDirectory) or (not temp_node.all.IsDirectory and not onlyDirectory) then
-                                            tmp := true;
-                                        end if;
-                                    else
-                                        temp_node := temp_node.all.Next;
-                                    end if;
-                                    
-                                end loop;
-                                
-                                --  while temp_node /= Null and then (not temp_node.all.IsDirectory and then SU.To_String(temp_node.all.Name) /= part) loop
-                                --      temp_node := temp_node.all.Next;
-                                --  end loop;
-                                
-                            end if;
+                        if has_glob then
+                            regex := Compile(part, True);
                         end if;
+                        while temp_node /= Null and then ((not temp_node.all.IsDirectory and then (I /= path'Last or else onlyDirectory)) -- skip all file, until on the last of the path wich may be kept if not looking for a directory 
+                                                          or else (if has_glob then not Match(SU.To_String(temp_node.all.Name), regex) -- if the path contain regex, use it to found the correct node
+                                                          else SU.To_String(temp_node.all.Name) /= Part)) loop -- else, use a simple comparaison
+                            temp_node := temp_node.all.Next;
+                        end loop;
                         if temp_node = Null then
                             raise Dir_Not_Found with "The path contains an unknown directory!";
                         end if;
