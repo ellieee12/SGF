@@ -46,8 +46,8 @@ package sgf is
                                  Archive_Path_Name : in String;
                                  Dir_To_Be_Archived : in String) ;
     
-    function Get_Size (Sgf : in out T_SGF ; Path : in String) return Integer;
-    function Get_Name (Sgf : in out T_SGF ;  Path : in String) return String;
+    function Get_Size (Sgf : in out T_SGF ; Path : in String; IsDirectory : in Boolean) return Integer;
+    function Get_Name (Sgf : in out T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
     
 
     

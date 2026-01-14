@@ -26,11 +26,10 @@ procedure test_sgf is
         Create_Directory(Sgf,"/usr/local/share");
         put(List_Files_Recursive(Sgf,"./"));
         
-        Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "/usr/local/share");
-        Copy(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.py", "/usr/local/share");
-        put(List_Files_Recursive(Sgf,"./"));
-        
-        
+        --  Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "/usr/local/share");
+        --  Copy(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.py", "/usr/local/share");
+        --  put(List_Files_Recursive(Sgf,"./"));
+
     end Construct_SGF_Example;
     
     procedure Get_Current_Working_Directory_Test (Sgf : out T_SGF) is
@@ -136,17 +135,24 @@ procedure test_sgf is
         Construct_SGF_Example (Sgf);
         -- archive target save path name given
         Archive_Directory(Sgf, "/home/user1/pim/projet/home.tar","/home");
-        pragma Assert(Get_Name(Sgf,"/home/user1/pim/projet/home.tar")="home.tar");
-        pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar")=50);
+        put(List_Files_Recursive(Sgf,"./"));
+        put_line("name:"&Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False));
+        pragma Assert(Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False)="home.tar");
+        put(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False));
+        pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False)=50);
+        put(List_Files_Recursive(Sgf,"./"));
         Remove(Sgf,"/home/user1/pim/projet/home.tar");
+        put(List_Files_Recursive(Sgf,"./"));
         -- archive target save path name not given
-        Archive_Directory(Sgf, "home.tar","/home");
-        pragma Assert(Get_Name(Sgf,"home.tar")="home.tar");
-        pragma Assert(Get_Size(Sgf,"home.tar")=50);
+        Archive_Directory(Sgf, "/home/home.tar","/home");
+        put(List_Files_Recursive(Sgf,"./"));
+        pragma Assert(Get_Name(Sgf,"/home/home.tar",False)="home.tar");
+        pragma Assert(Get_Size(Sgf,"/home/home.tar",False)=50);
     end Archive_Directory_Test;
 
     
 begin
+    
     -- Get_Current_Working_Directory_Test(Sgf);
     Archive_Directory_Test(Sgf);
     --  Create_Directory_Test(Sgf);

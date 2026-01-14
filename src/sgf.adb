@@ -38,6 +38,7 @@ package body sgf is
         start : Positive;
         regex : Regexp;
     begin
+        put_line("path provided : " & path);
         if path = "" then
             raise Empty_Path with "The path provided is empty !";
         end if;
@@ -60,7 +61,7 @@ package body sgf is
                         
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        if I /= path'Last or else onlyDirectory then
+                        if I /= path'Last or onlyDirectory then
                             if (for some C of part => C = '*' or else C = '?') then
                                 regex := Compile(Glob_To_Regex(part));
                                 while temp_node /= Null and then (temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
@@ -79,8 +80,18 @@ package body sgf is
                                 end loop;
                             else
                                 while temp_node /= Null and then (not temp_node.all.IsDirectory and SU.To_String(temp_node.all.Name) /= part) loop
+                                    put_line("Current name :" &temp_node.all.Name);
+                                    put_line("Current part : " & part);
                                     temp_node := temp_node.all.Next;
                                 end loop;
+                                --  put_line("entered");
+                                --  put_line("Current name :" &temp_node.all.Name);
+                                --  put_line("Current part : " & part);
+                                --  if temp_node.all.IsDirectory then
+                                --      put_line("Is a directory");
+                                --  else
+                                --      put_line("not a directory");
+                                --  end if;
                             end if;
                         end if;
                         if temp_node = Null then
@@ -94,6 +105,7 @@ package body sgf is
         if onlyDirectory and not temp_node.all.IsDirectory then
             raise Not_A_Dir with "File is not a directory !";
         elsif not onlyDirectory and temp_node.all.IsDirectory then
+            put_line("Current name :" & temp_node.all.Name);
             raise Not_A_File with "Directory is not a file !";
         end if;
         return temp_node;
@@ -386,6 +398,7 @@ package body sgf is
             end if;
             Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
             Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
+            
             Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path), True);
         end if;
         -- get node of the target directory
@@ -610,8 +623,7 @@ package body sgf is
         archive_name, new_path_name : Unbounded_String;
     begin
         -- Verify if directory exists
-        temp_node := Get_Node_From_Path(Sgf,Dir_To_Be_Archived);
-        
+        temp_node := Get_Node_From_Path(Sgf,Dir_To_Be_Archived,True);
         res := 0;
         Extract_Archive_Info(Archive_Path_Name,new_path_name,archive_name);
         Validate_Name(SU.To_String(archive_name));
@@ -625,6 +637,7 @@ package body sgf is
             end if;
             temp_node := temp_node.all.Next;
         end loop;
+        put_line(SU.To_String(new_path_name) & "/" & SU.To_String(archive_name));
         Create_File(Sgf,SU.To_String(new_path_name) & "/" & SU.To_String(archive_name), res);
     end Archive_Directory;
     
@@ -648,16 +661,16 @@ package body sgf is
         return temp_res;
     end Archive_Directory_Recursive;
     
-    function Get_Name (Sgf : in out T_SGF; Path : in String) return String is
+    function Get_Name (Sgf : in out T_SGF; Path : in String; IsDirectory : in Boolean) return String is
         
     begin
-        return SU.To_String(Get_Node_From_Path(Sgf,Path).all.Name);
+        return SU.To_String(Get_Node_From_Path(Sgf,Path,IsDirectory).all.Name);
     end Get_Name;
    
-    function Get_Size (Sgf : in out T_SGF; Path : in String) return Integer is
+    function Get_Size (Sgf : in out T_SGF; Path : in String; IsDirectory : in Boolean) return Integer is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(Sgf,Path);
+        temp_node := Get_Node_From_Path(Sgf,Path,IsDirectory);
         if temp_node.all.IsDirectory then 
             return 0;
         else
