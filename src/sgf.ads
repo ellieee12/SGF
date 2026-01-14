@@ -43,15 +43,18 @@ package sgf is
     procedure Copy(SGF : in out T_SGF; path : in String; new_path : in String);
 
     procedure Archive_Directory (Sgf : in out T_SGF;
-                                 Path : in String);
-    function Get_Size (Sgf : in T_SGF ; Path : in String) return Integer;
-    function Get_Name (Sgf : in T_SGF ;  Path : in String) return String;
+                                 Archive_Path_Name : in String;
+                                 Dir_To_Be_Archived : in String) ;
+    
+    function Get_Size (Sgf : in out T_SGF ; Path : in String) return Integer;
+    function Get_Name (Sgf : in out T_SGF ;  Path : in String) return String;
     
 
     Directory_Exists_Error : exception;
     Control_Character_Error : exception;
     Forbidden_Character_Error : exception;
     Dot_Name_Error : exception;
+    Invalid_Archive_Path : exception;
 private
     type T_Node;
     type T_Pointer_Node is access T_Node;
@@ -103,6 +106,10 @@ private
                                   res : in Unbounded_String; 
                                   level : in Natural) return Unbounded_String;
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
+    
+    procedure Extract_Archive_Info (Arg : String;
+                                    Target_Path : out Unbounded_String;
+                                    Zip_Name : out Unbounded_String);
     
     
 end sgf;

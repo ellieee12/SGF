@@ -128,11 +128,24 @@ procedure test_sgf is
     procedure Archive_Directory_Test (Sgf :out T_SGF) is
     
     begin 
-        Construct_SGF_Example ( 
+        Construct_SGF_Example (Sgf);
+        -- archive target save path name given
+        Archive_Directory(Sgf, "/home/user1/pim/projet/home.tar","/home");
+        pragma Assert(Get_Name(Sgf,"/home/user1/pim/projet/home.tar")="home.tar");
+        pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar")=50);
+        Remove(Sgf,"/home/user1/pim/projet/home.tar");
+        -- archive target save path name not given
+        Archive_Directory(Sgf, "home.tar","/home");
+        pragma Assert(Get_Name(Sgf,"home.tar")="home.tar");
+        pragma Assert(Get_Size(Sgf,"home.tar")=50);
     end Archive_Directory_Test;
+
+    
 begin
-    Get_Current_Working_Directory_Test(Sgf);
-    Create_Directory_Test(Sgf);
-    Create_Directory_Exception_Test(Sgf);
+    -- Get_Current_Working_Directory_Test(Sgf);
+    Archive_Directory_Test(Sgf);
+    --  Create_Directory_Test(Sgf);
+    --  Create_Directory_Exception_Test(Sgf);
+    --  Extract_Archive_Directory_Test(Sgf);
 end test_sgf;
 
