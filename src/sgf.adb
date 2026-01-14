@@ -17,7 +17,6 @@ package body sgf is
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
-        regex : Regexp;
     begin
         if path = "" then
             raise Empty_Path with "The path provided is empty !";
@@ -42,11 +41,8 @@ package body sgf is
                         
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        if has_glob then
-                            regex := Compile(part, True);
-                        end if;
                         while temp_node /= Null and then ((not temp_node.all.IsDirectory and then (I /= path'Last or else onlyDirectory)) -- skip all file, until on the last of the path wich may be kept if not looking for a directory 
-                                                          or else (if has_glob then not Match(SU.To_String(temp_node.all.Name), regex) -- if the path contain regex, use it to found the correct node
+                                                          or else (if has_glob then not Match(SU.To_String(temp_node.all.Name), Compile(part, True)) -- if the path contain regex, use it to found the correct node
                                                           else SU.To_String(temp_node.all.Name) /= Part)) loop -- else, use a simple comparaison
                             temp_node := temp_node.all.Next;
                         end loop;
