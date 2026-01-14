@@ -21,7 +21,7 @@ package sgf is
    
     -- Create a new directory based on the path name given (relative and absolute path included)
     procedure Create_Directory(Sgf : in  out T_SGF;
-                                             Path : in String);
+                               Path : in String);
     
     -- Change the current working directory based on a new given (relative and absolute path included)
     procedure Current_Directory(SGF : in out T_SGF; path : in String := "/");
@@ -32,42 +32,49 @@ package sgf is
     
     -- List recursively all the files and directory of the current working directory 
     function List_Files_Recursive(SGF : in out T_SGF; path : in String := ".") return String;
-    function List_Files_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node; res : in Unbounded_String; level : in Natural) return Unbounded_String;
     
     procedure Remove(SGF : in out T_SGF; path : in String);
     
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String);
-    procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
+
     procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
     
     procedure Copy(SGF : in out T_SGF; path : in String; new_path : in String);
 
-    --procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
+    procedure Archive_Directory (Sgf : in out T_SGF;
+                                 Archive_Path_Name : in String;
+                                 Dir_To_Be_Archived : in String) ;
+    
+    function Get_Size (Sgf : in out T_SGF ; Path : in String) return Integer;
+    function Get_Name (Sgf : in out T_SGF ;  Path : in String) return String;
+    
+
     Directory_Exists_Error : exception;
     Control_Character_Error : exception;
     Forbidden_Character_Error : exception;
     Dot_Name_Error : exception;
+    Invalid_Archive_Path : exception;
 private
     type T_Node;
     type T_Pointer_Node is access T_Node;
     type T_Node is
-        record
-            Name : Unbounded_String;
-            Size: Integer;
-            IsDirectory : Boolean;
-            Child : T_Pointer_Node;
-            Parent : T_Pointer_Node;
-            Next : T_Pointer_Node;
-            Before : T_Pointer_Node;
-        end record;
+       record
+           Name : Unbounded_String;
+           Size: Integer;
+           IsDirectory : Boolean;
+           Child : T_Pointer_Node;
+           Parent : T_Pointer_Node;
+           Next : T_Pointer_Node;
+           Before : T_Pointer_Node;
+       end record;
     
     
     type T_SGF is
-        record
-            Root : T_Pointer_Node;
-            Current : T_Pointer_Node;
-        end record;
+       record
+           Root : T_Pointer_Node;
+           Current : T_Pointer_Node;
+       end record;
    
    
     --  Control_Character_Error : exception;
@@ -89,6 +96,20 @@ private
     procedure Verify_File_Name_Existence (Current_Node : in T_Pointer_Node; 
                                           Name : in String);
     procedure Verify_Directory_Name_Existence (Current_Node : in T_Pointer_Node; 
-                                          Name : in String);
-  
+                                               Name : in String);
+    
+    function Archive_Directory_Recursive (Sgf : in out T_SGF;
+                                          node : in T_Pointer_Node;
+                                          res : in Integer) return Integer ;
+    function List_Files_Recursive(SGF : in out T_SGF; 
+                                  node : in T_Pointer_Node; 
+                                  res : in Unbounded_String; 
+                                  level : in Natural) return Unbounded_String;
+    procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
+    
+    procedure Extract_Archive_Info (Arg : String;
+                                    Target_Path : out Unbounded_String;
+                                    Zip_Name : out Unbounded_String);
+    
+    
 end sgf;

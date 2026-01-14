@@ -6,6 +6,7 @@ with Ada.Unchecked_Deallocation;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with GNAT.Regpat;         use GNAT.Regpat;
 
 package body sgf is
     package SU renames Ada.Strings.Unbounded;
@@ -113,7 +114,7 @@ package body sgf is
     
     function List_Files_Recursive(SGF : in out T_SGF; 
                                   path : in String := "."
-                                  ) return String is
+                                 ) return String is
         temp_node : T_Pointer_Node;
         res : Unbounded_String;
     begin
@@ -422,7 +423,7 @@ package body sgf is
     begin
         Path_Unbounded := SU.To_Unbounded_String(Path);
         -- extract directory name
-        L := Path'Length;
+        L := Path'Last;
         -- TODO : manage empty path
         K := SU.Index (Source => Path_Unbounded,
                        Pattern => "/",
@@ -517,4 +518,131 @@ package body sgf is
             end case;
         end loop;
     end Validate_Name;
+
+
+    procedure Extract_Archive_Info (Arg : in String;
+                                    Target_Path : out Unbounded_String;
+                                    Zip_Name : out Unbounded_String) is
+
+        Matcher : GNAT.Regpat.Pattern_Matcher :=
+          GNAT.Regpat.Compile ("^(?:(.*/))?([^/]+)$");
+
+        Matches : GNAT.Regpat.Match_Array (0 .. 2);
+
+        function Ends_With (S, Suffix : String) return Boolean is
+        begin
+            return S'Length >= Suffix'Length
+              and then S (S'Last - Suffix'Length + 1 .. S'Last) = Suffix;
+        end Ends_With;
+
+    begin
+        -- Reject directory
+        if Arg'Length > 0 and then Arg (Arg'Last) = '/' then
+            raise Constraint_Error with "Archive name cannot be a directory";
+        end if;
+
+        GNAT.Regpat.Match (Matcher, Arg, Matches);
+
+        if Matches (0) = GNAT.Regpat.No_Match then
+            raise Constraint_Error with "Invalid archive name format";
+        end if;
+
+        -- Extract path
+        if Matches (1) /= GNAT.Regpat.No_Match then
+            declare
+                Path_With_Slash : constant String :=
+                  Arg (Matches (1).First .. Matches (1).Last);
+            begin
+                if Path_With_Slash = "/" then
+                    Target_Path := To_Unbounded_String ("/");
+                else
+                    -- remove trailing '/'
+                    Target_Path :=
+                      To_Unbounded_String
+                        (Path_With_Slash (Path_With_Slash'First
+                         .. Path_With_Slash'Last - 1));
+                end if;
+            end;
+        else
+            Target_Path := To_Unbounded_String (".");
+        end if;
+        -- Extract filename
+        Zip_Name :=
+          To_Unbounded_String
+            (Arg (Matches (2).First .. Matches (2).Last));
+
+        -- Normalize extension
+        if not Ends_With (To_String (Zip_Name), ".tar")
+          and then not Ends_With (To_String (Zip_Name), ".tar.gz")
+          and then not Ends_With (To_String (Zip_Name), ".tgz")
+        then
+            Zip_Name := Zip_Name & ".tar";
+        end if;
+    end Extract_Archive_Info;
+
+    
+    procedure Archive_Directory (Sgf : in out T_SGF;
+                                 Archive_Path_Name : in String;
+                                 Dir_To_Be_Archived : in String) is
+        temp_node : T_Pointer_Node;
+        res : Integer;
+        archive_name, new_path_name : Unbounded_String;
+    begin
+        -- Verify if directory exists
+        temp_node := Get_Node_From_Path(Sgf,Dir_To_Be_Archived);
+        
+        res := 0;
+        Extract_Archive_Info(Archive_Path_Name,new_path_name,archive_name);
+        Validate_Name(SU.To_String(archive_name));
+        temp_node := temp_node.all.Child;
+        while temp_node /= null loop
+            if not temp_node.all.IsDirectory then
+                res := res + temp_node.all.Size;
+            end if;
+            if temp_node.all.Child /= Null then
+                res := res + Archive_Directory_Recursive(Sgf,temp_node,res);
+            end if;
+            temp_node := temp_node.all.Next;
+        end loop;
+        Create_File(Sgf,SU.To_String(new_path_name) & "/" & SU.To_String(archive_name), res);
+    end Archive_Directory;
+    
+    function Archive_Directory_Recursive (Sgf : in out T_SGF;
+                                          node : in T_Pointer_Node;
+                                          res : in Integer) return Integer is
+        temp_node : T_Pointer_Node;
+        temp_res : Integer;
+    begin
+        temp_res := 0;
+        temp_node := node.all.Child;
+        while temp_node /= null loop
+            if not temp_node.all.IsDirectory then
+                temp_res := temp_res + temp_node.all.Size;
+            end if;
+            if temp_node.all.Child/=Null then
+                temp_res := temp_res + Archive_Directory_Recursive(Sgf,temp_node,temp_res);
+            end if;
+            temp_node := temp_node.all.Next;
+        end loop;
+        return temp_res;
+    end Archive_Directory_Recursive;
+    
+    function Get_Name (Sgf : in out T_SGF; Path : in String) return String is
+        
+    begin
+        return SU.To_String(Get_Node_From_Path(Sgf,Path).all.Name);
+    end Get_Name;
+   
+    function Get_Size (Sgf : in out T_SGF; Path : in String) return Integer is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(Sgf,Path);
+        if temp_node.all.IsDirectory then 
+            return 0;
+        else
+            return temp_node.all.Size;
+        end if;
+    end Get_Size;
+    
+    
 end sgf;
