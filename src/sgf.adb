@@ -32,7 +32,7 @@ package body sgf is
         return SU.To_String(Result) & "$";
     end Glob_To_Regex;
     
-    function Get_Node_From_Path(SGF : in out T_SGF; path : in String) return T_Pointer_Node is
+    function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
         regex : Regexp;
@@ -59,20 +59,30 @@ package body sgf is
                         
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        if (for some C of part => C = '*' or else C = '?') then
-                            regex := Compile(Glob_To_Regex(part));
-                            while temp_node /= Null and then Match(SU.To_String(temp_node.all.Name), regex) loop
-                                temp_node := temp_node.all.Next;
-                            end loop;
-                        else
-                            --  put_line("part:"&part);
-                            --  put_line("node name :"&temp_node.all.Name);
-                            while temp_node /= Null and then SU.To_String(temp_node.all.Name) /= part loop
-                                temp_node := temp_node.all.Next;
-                            end loop;
+                        if I /= path'Last or else onlyDirectory then
+                            if (for some C of part => C = '*' or else C = '?') then
+                                regex := Compile(Glob_To_Regex(part));
+                                while temp_node /= Null and then (temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
+                                    temp_node := temp_node.all.Next;
+                                end loop;
+                            else
+                                while temp_node /= Null and then (temp_node.all.IsDirectory and SU.To_String(temp_node.all.Name) /= part) loop
+                                    temp_node := temp_node.all.Next;
+                                end loop;
+                            end if;
+                        elsif I = path'Last then
+                            if (for some C of part => C = '*' or else C = '?') then
+                                regex := Compile(Glob_To_Regex(part));
+                                while temp_node /= Null and then (not temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
+                                    temp_node := temp_node.all.Next;
+                                end loop;
+                            else
+                                while temp_node /= Null and then (not temp_node.all.IsDirectory and SU.To_String(temp_node.all.Name) /= part) loop
+                                    temp_node := temp_node.all.Next;
+                                end loop;
+                            end if;
                         end if;
                         if temp_node = Null then
-                            put("here");
                             raise Dir_Not_Found with "The path contains an unknown directory!";
                         end if;
                     end if;
@@ -80,16 +90,18 @@ package body sgf is
                 end;
             end if;
         end loop;
+        if onlyDirectory and not temp_node.all.IsDirectory then
+            raise Not_A_Dir with "File is not a directory !";
+        elsif not onlyDirectory and temp_node.all.IsDirectory then
+            raise Not_A_File with "Directory is not a file !";
+        end if;
         return temp_node;
     end Get_Node_From_Path;
     
     procedure Current_Directory(SGF : in out T_SGF; path : in String := "/") is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.all.IsDirectory then
-            raise Not_A_Dir with "File is not a directory !";
-        end if;
+        temp_node := Get_Node_From_Path(SGF, path, True);
         SGF.Current := temp_node;
     end Current_Directory;
     
@@ -98,10 +110,7 @@ package body sgf is
         res : Unbounded_String;
     begin
         res := SU.To_Unbounded_String("");
-        temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.all.IsDirectory then
-            raise Not_A_Dir with "File is not a directory !";
-        end if;
+        temp_node := Get_Node_From_Path(SGF, path, True);
         temp_node := temp_node.all.Child;
         while temp_node /= null loop
             res := res & temp_node.all.Name ;
@@ -117,11 +126,7 @@ package body sgf is
         temp_node : T_Pointer_Node;
         res : Unbounded_String;
     begin
-        
-        temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.all.IsDirectory then
-            raise Not_A_Dir with "File is not a directory !";
-        end if;
+        temp_node := Get_Node_From_Path(SGF, path, True);
         if temp_node.all.Parent=null then
             res := SU.To_Unbounded_String("/"&ASCII.LF);
         else
@@ -174,7 +179,7 @@ package body sgf is
     procedure Remove(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
+        temp_node := Get_Node_From_Path(SGF, path, False);
         if temp_node.all.Before /= Null then
             temp_node.all.Before.Next := temp_node.Next;
         else
@@ -186,10 +191,7 @@ package body sgf is
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
-        if not temp_node.all.IsDirectory then
-            raise Not_A_Dir with "File is not a directory !";
-        end if;
+        temp_node := Get_Node_From_Path(SGF, path, True);
         if temp_node.all.Before /= Null then
             temp_node.all.Before.Next := temp_node.Next;
         else
@@ -222,16 +224,10 @@ package body sgf is
     procedure Move(SGF : in out T_SGF; path : in String; new_path : in String) is
         temp_node, new_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
-        if temp_node.all.IsDirectory then
-            raise Not_A_File with "Directory is not a file !";
-        end if;
+        temp_node := Get_Node_From_Path(SGF, path, False);
         
         begin
-            new_node := Get_Node_From_Path(SGF, new_path);
-            if not new_node.all.IsDirectory then
-                raise Not_A_Dir with "File is not a directory !";
-            end if;
+            new_node := Get_Node_From_Path(SGF, new_path, True);
             if temp_node.all.Before /= Null then
                 temp_node.all.Before.Next := temp_node.Next;
             else
@@ -256,10 +252,7 @@ package body sgf is
                         temp_node.all.Name := SU.To_Unbounded_String(new_path);
                     else
                         temp_node.all.Name := SU.To_Unbounded_String(new_path(P + 1 .. new_path'Last));
-                        new_node := Get_Node_From_Path(SGF, new_path(new_path'First .. P - 1));
-                        if not new_node.all.IsDirectory then
-                            raise Not_A_Dir with "File is not a directory !";
-                        end if;
+                        new_node := Get_Node_From_Path(SGF, new_path(new_path'First .. P - 1), True);
                         if temp_node.all.Before /= Null then
                             temp_node.all.Before.Next := temp_node.Next;
                         else
@@ -283,22 +276,50 @@ package body sgf is
     procedure Copy(SGF : in out T_SGF; path : in String; new_path : in String) is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(SGF, path);
-        if temp_node.all.IsDirectory then
-            raise Not_A_File with "Directory is not a file !";
-        end if;
+        temp_node := Get_Node_From_Path(SGF, path, False);
         if new_path(new_path'Last) = '/' then
             Create_File(SGF, new_path & SU.To_String(temp_node.all.Name), temp_node.all.Size);
         else
             Create_File(SGF, new_path & '/' & SU.To_String(temp_node.all.Name), temp_node.all.Size);
         end if;
     end Copy;
-
+    
+    procedure Copy_Recursive(SGF : in out T_SGF; path : in String; new_path : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := Get_Node_From_Path(SGF, path, True);
+        if new_path(new_path'Last) = '/' then
+            Create_Directory(SGF, new_path & SU.To_String(temp_node.all.Name));
+        else
+            Create_Directory(SGF, new_path & '/' & SU.To_String(temp_node.all.Name));
+        end if;
+        temp_node := temp_node.all.Child;
+        while temp_node /= Null loop
+            if temp_node.IsDirectory then
+                if new_path(new_path'Last) = '/' then
+                    null;
+                    --Copy_Recursive(SGF, temp_node, new_path & SU.To_String(temp_node.all.Name));
+                else
+                    null;
+                    --Copy_Recursive(SGF, temp_node, new_path & '/' & SU.To_String(temp_node.all.Name));
+                end if;             
+            else
+                if new_path(new_path'Last) = '/' then
+                    null;
+                    --Copy(SGF, temp_node, new_path & SU.To_String(temp_node.all.Name));
+                else
+                    null;
+                    --Copy(SGF, temp_node, new_path & '/' & SU.To_String(temp_node.all.Name));
+                end if;  
+            end if;
+            temp_node := temp_node.all.Next;
+        end loop;
+    end Copy_Recursive;
 
     function Is_Empty (Sgf : in out T_SGF; Path : in String) return boolean is
         temp_node : T_Pointer_Node;
     begin
-        temp_node := Get_Node_From_Path(Sgf,Path);
+        temp_node := Get_Node_From_Path(Sgf,Path, True);
         return temp_node.all.Child/=null;
     end Is_Empty;
    
@@ -364,7 +385,7 @@ package body sgf is
             end if;
             Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
             Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
-            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
+            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path), True);
         end if;
         -- get node of the target directory
         
@@ -452,7 +473,7 @@ package body sgf is
             if Target_Path = "" then
                 head:=Sgf.Current;
             else
-                Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path));
+                Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path), True);
             end if;
         end if;
         Verify_Directory_Name_Existence(head.all.Child,SU.To_String(Name));
