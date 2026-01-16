@@ -58,6 +58,9 @@ package sgf is
     Forbidden_Character_Error : exception;
     Dot_Name_Error : exception;
     Invalid_Archive_Path : exception;
+    File_Exists_Error : exception;
+    File_Name_Is_Directory_Error : exception;
+    Negative_Size_Error: Exception;
 private
     type T_Node;
     type T_Pointer_Node is access T_Node;
@@ -88,8 +91,7 @@ private
     Dir_Not_Found : exception;
     Not_A_Dir : exception;
     Not_A_File : exception;
-    File_Exists_Error : exception;
-    File_Name_Is_Directory_Error : exception;
+    
     
     
     procedure Validate_Name (Name : in String);
