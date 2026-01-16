@@ -109,6 +109,8 @@ private
                                   level : in Natural) return Unbounded_String;
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
+    procedure Copy_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node; new_path : in String);
+    
     procedure Extract_Archive_Info (Arg : String;
                                     Target_Path : out Unbounded_String;
                                     Zip_Name : out Unbounded_String);

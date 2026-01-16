@@ -6,6 +6,7 @@ with Ada.Unchecked_Deallocation;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded.Aux; use Ada.Strings.Unbounded.Aux;
 with GNAT.Regpat;         use GNAT.Regpat;
 
 package body sgf is
@@ -43,7 +44,7 @@ package body sgf is
                         temp_node := temp_node.all.Child;
                         while temp_node /= Null and then ((not temp_node.all.IsDirectory and then (I /= path'Last or else onlyDirectory)) -- skip all file, until on the last of the path wich may be kept if not looking for a directory 
                                                           or else (if has_glob then not Match(SU.To_String(temp_node.all.Name), Compile(part, True)) -- if the path contain regex, use it to found the correct node
-                                                          else SU.To_String(temp_node.all.Name) /= Part)) loop -- else, use a simple comparaison
+                                                          else temp_node.all.Name /= Part)) loop -- else, use a simple comparaison
                             temp_node := temp_node.all.Next;
                         end loop;
                         if temp_node = Null then
@@ -241,43 +242,51 @@ package body sgf is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path, False);
-        if new_path(new_path'Last) = '/' then
-            Create_File(SGF, new_path & SU.To_String(temp_node.all.Name), temp_node.all.Size);
-        else
-            Create_File(SGF, new_path & '/' & SU.To_String(temp_node.all.Name), temp_node.all.Size);
-        end if;
+        declare
+            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+        begin
+            Create_File(SGF, correct_new_path, temp_node.all.Size);
+        end;
     end Copy;
     
     procedure Copy_Recursive(SGF : in out T_SGF; path : in String; new_path : in String) is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path, True);
-        if new_path(new_path'Last) = '/' then
-            Create_Directory(SGF, new_path & SU.To_String(temp_node.all.Name));
-        else
-            Create_Directory(SGF, new_path & '/' & SU.To_String(temp_node.all.Name));
-        end if;
-        temp_node := temp_node.all.Child;
-        while temp_node /= Null loop
-            if temp_node.IsDirectory then
-                if new_path(new_path'Last) = '/' then
-                    null;
-                    --Copy_Recursive(SGF, temp_node, new_path & SU.To_String(temp_node.all.Name));
+        declare
+            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+        begin
+            Create_Directory(SGF, correct_new_path);
+            temp_node := temp_node.all.Child;
+            while temp_node /= Null loop
+                if temp_node.IsDirectory then
+                    Copy_Recursive(SGF, temp_node, correct_new_path);
                 else
-                    null;
-                    --Copy_Recursive(SGF, temp_node, new_path & '/' & SU.To_String(temp_node.all.Name));
-                end if;             
-            else
-                if new_path(new_path'Last) = '/' then
-                    null;
-                    --Copy(SGF, temp_node, new_path & SU.To_String(temp_node.all.Name));
+                    Create_File(SGF, correct_new_path & "/" & SU.To_String(temp_node.all.Name), temp_node.all.Size);
+                end if;
+                temp_node := temp_node.all.Next;
+            end loop;
+        end;
+    end Copy_Recursive;
+    
+    procedure Copy_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node; new_path : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := node;
+        declare
+            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+        begin
+            Create_Directory(SGF, correct_new_path);
+            temp_node := temp_node.all.Child;
+            while temp_node /= Null loop
+                if temp_node.IsDirectory then
+                    Copy_Recursive(SGF, temp_node, correct_new_path);
                 else
-                    null;
-                    --Copy(SGF, temp_node, new_path & '/' & SU.To_String(temp_node.all.Name));
-                end if;  
-            end if;
-            temp_node := temp_node.all.Next;
-        end loop;
+                    Create_File(SGF, correct_new_path & "/" & SU.To_String(temp_node.all.Name), temp_node.all.Size);
+                end if;
+                temp_node := temp_node.all.Next;
+            end loop;
+        end;
     end Copy_Recursive;
 
     function Is_Empty (Sgf : in out T_SGF; Path : in String) return boolean is
