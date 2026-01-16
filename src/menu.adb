@@ -14,6 +14,7 @@ package body menu is
             begin
                 put("Command number : ");
                 get(choice);
+                Skip_Line;
                 case choice is
                     when 1 => Print_Current_Working_Directory(Sgf);
                     when 2 => Add_New_File(Sgf);
@@ -70,6 +71,7 @@ package body menu is
             begin
                 put("What is the size of the file?");
                 Get(file_size);
+                Skip_Line;
                 if file_size<=0 then
                     put_line("--------------------------------------------");
                     put_line(" !!! Invalid file size !!!");
@@ -81,7 +83,6 @@ package body menu is
                     put_line("--------------------------------------------");
                     put_line(" !!! Invalid file size !!!");
                     put_line("--------------------------------------------");
-                    skip_line;
             end;
         end loop;
     end Validate_File_Size;
@@ -151,7 +152,6 @@ package body menu is
         path_name : Unbounded_String;
     begin
         put_line("--------------------------------------------");
-        Skip_line;
         path_name := Get_User_File_or_Directory_Name(True);
         Validate_Create_File_Or_Directory(Sgf,path_name,path_name,0,True);
         put_line("Directory successfully created.");
@@ -164,7 +164,6 @@ package body menu is
     begin
         put_line("--------------------------------------------");
         put("What is the destination path (if empty, file will be saved in current working directory)? ");
-        Skip_Line;
         get_line(path_name);
         file_path := Get_User_File_or_Directory_Name(false);
         
@@ -176,7 +175,6 @@ package body menu is
             path_name := SU.To_Unbounded_String("./");
         end if;
         Validate_File_Size(file_size);
-        Skip_line;
         Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,False);
         if path_name = "./" then
             put_line("File successfully created at " & Get_Current_Directory(Sgf));
@@ -191,7 +189,6 @@ package body menu is
         file_path : Unbounded_String;
         file_size : Integer;
     begin
-        Skip_Line;
         file_path := Get_File_Path_Name;
         Validate_File_Size(file_size);
         
@@ -221,7 +218,6 @@ package body menu is
     begin
         put_line("--------------------------------------------");
         put("What is the path of target directory (if empty, content of current working directory will be printed)? ");
-        Skip_Line;
         Get_Line(path_name);
         if recursive then
             if SU.Length(path_name)=0 then
@@ -242,7 +238,7 @@ package body menu is
     procedure Change_Current_Directory (Sgf : in out T_Sgf) is
         path_name : Unbounded_String;
     begin
-        Skip_Line;
+        
         path_name := Get_File_Path_Name;
         
         if SU.Length(path_name)=0 then
@@ -258,4 +254,6 @@ package body menu is
             put_line(" !!! "& Exception_Message(E) &" !!!");
             Change_Current_Directory(Sgf);
     end Change_Current_Directory;
+    
+    
 end menu;
