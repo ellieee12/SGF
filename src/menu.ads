@@ -7,5 +7,6 @@ package menu is
     
 private
     procedure Print_Menu_Options;
-
+    procedure Print_Current_Working_Directory (Sgf : in T_Sgf);
+    procedure Add_New_File (Sgf : in out T_Sgf);
 end menu;
