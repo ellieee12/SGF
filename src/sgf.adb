@@ -6,6 +6,7 @@ with Ada.Unchecked_Deallocation;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded.Aux; use Ada.Strings.Unbounded.Aux;
 with GNAT.Regpat;         use GNAT.Regpat;
 
 package body sgf is
@@ -14,30 +15,9 @@ package body sgf is
     procedure Free is
       new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
     
-    function Glob_To_Regex (Pattern : String) return String is
-        Result : Unbounded_String := SU.To_Unbounded_String("^");
-    begin
-        for C of Pattern loop
-            case C is
-            when '*' =>
-                Result := Result & ".*";
-            when '?' =>
-                Result := Result & ".";
-            when '.' | '+' | '(' | ')' | '[' | ']' | '^' | '$' | '\' =>
-                Result := Result & '\' & C;
-            when others =>
-                Result := Result & C;
-            end case;
-        end loop;
-
-        return SU.To_String(Result) & "$";
-    end Glob_To_Regex;
-    
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
-        regex : Regexp;
-        
     begin
         if path = "" then
             raise Empty_Path with "The path provided is empty !";
@@ -50,10 +30,10 @@ package body sgf is
             start := path'First;
         end if;
         for I in start .. path'Last loop
-            if (I = path'Last and path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
+            if (I = path'Last and then path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
                 declare
-                    tmp : boolean:=false;
                     part : constant String := path(Start .. I);
+                    has_glob : Constant Boolean := (for some C of part => C = '*' or else C = '?');
                 begin
                     if part = ".." then
                         if temp_node.all.Parent /= Null then
@@ -62,41 +42,11 @@ package body sgf is
                         
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        if I /= path'Last or onlyDirectory then
-                            if (for some C of part => C = '*' or else C = '?') then
-                                regex := Compile(Glob_To_Regex(part));
-                                while temp_node /= Null and then (temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
-                                    temp_node := temp_node.all.Next;
-                                end loop;
-                            else
-                                while temp_node /= Null and then (temp_node.all.IsDirectory and SU.To_String(temp_node.all.Name) /= part) loop
-                                    temp_node := temp_node.all.Next;
-                                end loop;
-                            end if;
-                        elsif I = path'Last then
-                            if (for some C of part => C = '*' or else C = '?') then
-                                regex := Compile(Glob_To_Regex(part));
-                                while temp_node /= Null and then (not temp_node.all.IsDirectory and Match(SU.To_String(temp_node.all.Name), regex)) loop
-                                    temp_node := temp_node.all.Next;
-                                end loop;
-                            else
-                                while temp_node /= Null and not tmp loop
-                                    if SU.To_String(temp_node.all.Name) = part then
-                                        if (temp_node.all.IsDirectory and onlyDirectory) or (not temp_node.all.IsDirectory and not onlyDirectory) then
-                                            tmp := true;
-                                        end if;
-                                    else
-                                        temp_node := temp_node.all.Next;
-                                    end if;
-                                    
-                                end loop;
-                                
-                                --  while temp_node /= Null and then (not temp_node.all.IsDirectory and then SU.To_String(temp_node.all.Name) /= part) loop
-                                --      temp_node := temp_node.all.Next;
-                                --  end loop;
-                                
-                            end if;
-                        end if;
+                        while temp_node /= Null and then ((not temp_node.all.IsDirectory and then (I /= path'Last or else onlyDirectory)) -- skip all file, until on the last of the path wich may be kept if not looking for a directory 
+                                                          or else (if has_glob then not Match(SU.To_String(temp_node.all.Name), Compile(part, True)) -- if the path contain regex, use it to found the correct node
+                                                          else temp_node.all.Name /= Part)) loop -- else, use a simple comparaison
+                            temp_node := temp_node.all.Next;
+                        end loop;
                         if temp_node = Null then
                             raise Dir_Not_Found with "The path contains an unknown directory!";
                         end if;
@@ -292,43 +242,51 @@ package body sgf is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path, False);
-        if new_path(new_path'Last) = '/' then
-            Create_File(SGF, new_path & SU.To_String(temp_node.all.Name), temp_node.all.Size);
-        else
-            Create_File(SGF, new_path & '/' & SU.To_String(temp_node.all.Name), temp_node.all.Size);
-        end if;
+        declare
+            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+        begin
+            Create_File(SGF, correct_new_path, temp_node.all.Size);
+        end;
     end Copy;
     
     procedure Copy_Recursive(SGF : in out T_SGF; path : in String; new_path : in String) is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(SGF, path, True);
-        if new_path(new_path'Last) = '/' then
-            Create_Directory(SGF, new_path & SU.To_String(temp_node.all.Name));
-        else
-            Create_Directory(SGF, new_path & '/' & SU.To_String(temp_node.all.Name));
-        end if;
-        temp_node := temp_node.all.Child;
-        while temp_node /= Null loop
-            if temp_node.IsDirectory then
-                if new_path(new_path'Last) = '/' then
-                    null;
-                    --Copy_Recursive(SGF, temp_node, new_path & SU.To_String(temp_node.all.Name));
+        declare
+            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+        begin
+            Create_Directory(SGF, correct_new_path);
+            temp_node := temp_node.all.Child;
+            while temp_node /= Null loop
+                if temp_node.IsDirectory then
+                    Copy_Recursive(SGF, temp_node, correct_new_path);
                 else
-                    null;
-                    --Copy_Recursive(SGF, temp_node, new_path & '/' & SU.To_String(temp_node.all.Name));
-                end if;             
-            else
-                if new_path(new_path'Last) = '/' then
-                    null;
-                    --Copy(SGF, temp_node, new_path & SU.To_String(temp_node.all.Name));
+                    Create_File(SGF, correct_new_path & "/" & SU.To_String(temp_node.all.Name), temp_node.all.Size);
+                end if;
+                temp_node := temp_node.all.Next;
+            end loop;
+        end;
+    end Copy_Recursive;
+    
+    procedure Copy_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node; new_path : in String) is
+        temp_node : T_Pointer_Node;
+    begin
+        temp_node := node;
+        declare
+            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+        begin
+            Create_Directory(SGF, correct_new_path);
+            temp_node := temp_node.all.Child;
+            while temp_node /= Null loop
+                if temp_node.IsDirectory then
+                    Copy_Recursive(SGF, temp_node, correct_new_path);
                 else
-                    null;
-                    --Copy(SGF, temp_node, new_path & '/' & SU.To_String(temp_node.all.Name));
-                end if;  
-            end if;
-            temp_node := temp_node.all.Next;
-        end loop;
+                    Create_File(SGF, correct_new_path & "/" & SU.To_String(temp_node.all.Name), temp_node.all.Size);
+                end if;
+                temp_node := temp_node.all.Next;
+            end loop;
+        end;
     end Copy_Recursive;
 
     function Is_Empty (Sgf : in out T_SGF; Path : in String) return boolean is
