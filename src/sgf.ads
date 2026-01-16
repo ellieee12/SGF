@@ -37,6 +37,7 @@ package sgf is
     
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String);
     
+    procedure Change_File_Size(SGF : in out T_SGF; path : in String; size : in Integer);
 
     procedure Move(SGF : in out T_SGF; path : in String; new_path : in String);
     
@@ -61,6 +62,11 @@ package sgf is
     File_Exists_Error : exception;
     File_Name_Is_Directory_Error : exception;
     Negative_Size_Error: Exception;
+    Empty_Name_Error : exception;
+    Empty_Path : exception;
+    Dir_Not_Found : exception;
+    Not_A_Dir : exception;
+    Not_A_File : exception;
 private
     type T_Node;
     type T_Pointer_Node is access T_Node;
@@ -86,11 +92,7 @@ private
     --  Control_Character_Error : exception;
     --  Forbidden_Character_Error : exception;
     --  Dot_Name_Error : exception;
-    Empty_Name_Error : exception;
-    Empty_Path : exception;
-    Dir_Not_Found : exception;
-    Not_A_Dir : exception;
-    Not_A_File : exception;
+    
     
     
     

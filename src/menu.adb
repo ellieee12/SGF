@@ -1,5 +1,6 @@
 with SGF; use SGF;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
 package body menu is
     package SU renames Ada.Strings.Unbounded;
@@ -17,6 +18,8 @@ package body menu is
                     when 1 => Print_Current_Working_Directory(Sgf);
                     when 2 => Add_New_File(Sgf);
                     when 3 => Add_New_Directory(Sgf);
+                    when 4 => Change_File_Size(Sgf);
+                        
                     when 6 => Print_Directory_Content(Sgf,False);
                     when 7 => Print_Directory_Content(Sgf,True);
                     when others => null;
@@ -65,7 +68,7 @@ package body menu is
     begin
         loop
             begin
-                put("What is the size of the new file?");
+                put("What is the size of the file?");
                 Get(file_size);
                 if file_size<=0 then
                     put_line("--------------------------------------------");
@@ -129,9 +132,15 @@ package body menu is
             put_line("--------------------------------------------");
             file_path := Get_User_File_or_Directory_Name(isDirectory);
             Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,isDirectory);
-        when Forbidden_Character_Error =>
+        when Forbidden_Character_Error  =>
             put_line("--------------------------------------------");
             put_line(" !!! "&replacement&"name cannot contain symbols such as \ / : * ? "" < > or | !!!");
+            put_line("--------------------------------------------");
+            file_path := Get_User_File_or_Directory_Name(isDirectory);
+            Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,isDirectory);
+        when Empty_Path | Empty_Name_Error =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "&replacement&"name cannot be empty !!!");
             put_line("--------------------------------------------");
             file_path := Get_User_File_or_Directory_Name(isDirectory);
             Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,isDirectory);
@@ -178,6 +187,35 @@ package body menu is
     
     end Add_New_File;
     
+    procedure Change_File_Size (Sgf : in out T_SGF) is
+        file_path : Unbounded_String;
+        file_size : Integer;
+    begin
+        Skip_Line;
+        file_path := Get_File_Path_Name;
+        Validate_File_Size(file_size);
+        
+        Change_File_Size(Sgf,SU.To_String(file_path),file_size);
+        put_line("File size changed successfully");
+        put_line("--------------------------------------------");
+    exception
+        when E : Empty_Path | Dir_Not_Found | Not_A_File =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Change_File_Size(Sgf);
+    end Change_File_Size;
+   
+    function Get_File_Path_Name return Unbounded_String is
+        file_path : Unbounded_String;
+    begin
+        put_line("--------------------------------------------");
+        put("What is the path of target file? ");
+        Get_Line(file_path);
+        return file_path;
+    end Get_File_Path_Name;
+    
+    
+    
     procedure Print_Directory_Content(Sgf : in out T_SGF; recursive : in boolean) is
         path_name : Unbounded_String;
     begin
@@ -197,10 +235,24 @@ package body menu is
             else
                 put_line(List_Files(Sgf,SU.To_String(path_name)));
             end if;
-        end if;
-        
+        end if;        
         put_line("--------------------------------------------");
     end Print_Directory_Content;
     
-    
-end menu;
+    --  procedure Change_Current_Directory (Sgf : in out Sgf) is
+    --      path_name : Unbounded_String;
+    --  begin
+    --      Skip_Line;
+    --      path_name := Get_File_Path_Name;
+    --      Current_Directory(Sgf,path_name);
+    --      if SU.Length(path_name)=0 then
+    --          Current_Directory(Sgf);
+    --      else
+    --          Current_Directory(Sgf,path_name);
+    --      end if;
+    --  exception
+    --      when E : Empty_Path | Dir_Not_Found | Not_A_File =>
+    --          put_line("--------------------------------------------");
+    --          put_line(" !!! "& Exception_Message(E) &" !!!");
+    --          Change_File_Size(Sgf);
+    end menu;

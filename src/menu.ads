@@ -18,4 +18,6 @@ private
                                                 file_size : in Integer;
                                                 isDirectory : in Boolean);
     procedure Add_New_Directory (Sgf : in out T_Sgf);
+    procedure Change_File_Size (Sgf : in out T_SGF) ;
+    function Get_File_Path_Name return Unbounded_String;
 end menu;

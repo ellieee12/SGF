@@ -412,7 +412,6 @@ package body sgf is
       
     procedure Create_Directory (Sgf : in  out T_SGF;
                                 Path: in String) is
-        Negative_Size_Error, Empty_Name_Error: Exception;
         current_child, new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
         Name,Target_Path,Path_Unbounded : Unbounded_String;
@@ -426,6 +425,9 @@ package body sgf is
                        Pattern => "/",
                        From => L,
                        Going => Ada.Strings.Backward);
+        if Path = "/" then 
+            raise Forbidden_Character_Error;
+        end if;
         -- if path name does not contain "/" then we create the a directory in the current directory
         if K = 0 then
             head:=Sgf.Current;
@@ -465,7 +467,6 @@ package body sgf is
             while tail.all.Next /= null loop
                 tail := tail.all.Next;
             end loop;
-
             tail.all.Next := new_node;
             new_node.all.Before := tail;
         end if;
@@ -639,6 +640,17 @@ package body sgf is
             return temp_node.all.Size;
         end if;
     end Get_Size;
+    
+    procedure Change_File_Size(SGF : in out T_SGF; path : in String; size : in Integer) is
+        temp_node : T_Pointer_Node;
+    begin
+        if size < 0  then
+            raise Negative_Size_Error;
+        end if;
+        
+        temp_node := Get_Node_From_Path(Sgf,Path,False);
+        temp_node.all.Size := size;
+    end Change_File_Size;
     
     
 end sgf;
