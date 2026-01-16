@@ -23,6 +23,7 @@ package body menu is
                     when 5 => Change_Current_Directory(Sgf);
                     when 6 => Print_Directory_Content(Sgf,False);
                     when 7 => Print_Directory_Content(Sgf,True);
+                    when 8 => Remove_file(Sgf);
                     when others => null;
                 end case;
                         
@@ -145,6 +146,21 @@ package body menu is
             put_line("--------------------------------------------");
             file_path := Get_User_File_or_Directory_Name(isDirectory);
             Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,isDirectory);
+        when E : Dir_Not_Found | Not_A_File =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            path_name := Get_Path_Name("What is the destination path (if empty, file will be saved in current working directory)? ");
+            if SU.Length(path_name)/=0 then
+                if SU.To_String(path_name)(SU.Length(path_name)) /= '/' then  
+                    path_name := path_name & "/";
+                end if;
+                if not (SU.To_String(path_name)(1) = '.' and SU.To_String(path_name)(2) = '/') or else SU.To_String(path_name)(1) /= '/' then  
+                    path_name := "./"&path_name;
+                end if;
+            else
+                path_name := SU.To_Unbounded_String("./");
+            end if;
+            Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,isDirectory);
     end Validate_Create_File_Or_Directory;
     
         
@@ -171,16 +187,15 @@ package body menu is
             if SU.To_String(path_name)(SU.Length(path_name)) /= '/' then  
                 path_name := path_name & "/";
             end if;
+            if SU.To_String(path_name)(1) /= '/' then  
+                path_name := "./"&path_name;
+            end if;
         else
             path_name := SU.To_Unbounded_String("./");
         end if;
         Validate_File_Size(file_size);
         Validate_Create_File_Or_Directory(Sgf,path_name,file_path,file_size,False);
-        if path_name = "./" then
-            put_line("File successfully created at " & Get_Current_Directory(Sgf));
-        else
-            put_line("File successfully created at " & path_name);
-        end if;
+        put_line("File successfully created.");
         put_line("--------------------------------------------");
     
     end Add_New_File;
@@ -189,7 +204,7 @@ package body menu is
         file_path : Unbounded_String;
         file_size : Integer;
     begin
-        file_path := Get_File_Path_Name;
+        file_path := Get_Path_Name("What is the path of target file? ");
         Validate_File_Size(file_size);
         
         Change_File_Size(Sgf,SU.To_String(file_path),file_size);
@@ -202,14 +217,14 @@ package body menu is
             Change_File_Size(Sgf);
     end Change_File_Size;
    
-    function Get_File_Path_Name return Unbounded_String is
+    function Get_Path_Name (msg : in String) return Unbounded_String is
         file_path : Unbounded_String;
     begin
         put_line("--------------------------------------------");
-        put("What is the path of target file? ");
+        put(msg);
         Get_Line(file_path);
         return file_path;
-    end Get_File_Path_Name;
+    end Get_Path_Name;
     
     
     
@@ -239,7 +254,7 @@ package body menu is
         path_name : Unbounded_String;
     begin
         
-        path_name := Get_File_Path_Name;
+        path_name := Get_Path_Name("What is the path of directory? ");
         
         if SU.Length(path_name)=0 then
             Current_Directory(Sgf);
@@ -255,5 +270,18 @@ package body menu is
             Change_Current_Directory(Sgf);
     end Change_Current_Directory;
     
+    procedure Remove_File(Sgf : in out T_SGF) is
+        path_name : Unbounded_String;
+    begin
+        path_name := Get_Path_Name("What is the path of target file? ");
+        Remove(Sgf,SU.To_String(path_name));
+        put_line("File successfully deleted");
+        put_line("--------------------------------------------");
+    exception
+        when E : Empty_Path | Dir_Not_Found | Not_A_File =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Remove_File(Sgf);
+    end Remove_File;
     
 end menu;
