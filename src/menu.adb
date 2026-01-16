@@ -19,7 +19,7 @@ package body menu is
                     when 2 => Add_New_File(Sgf);
                     when 3 => Add_New_Directory(Sgf);
                     when 4 => Change_File_Size(Sgf);
-                        
+                    when 5 => Change_Current_Directory(Sgf);
                     when 6 => Print_Directory_Content(Sgf,False);
                     when 7 => Print_Directory_Content(Sgf,True);
                     when others => null;
@@ -239,20 +239,23 @@ package body menu is
         put_line("--------------------------------------------");
     end Print_Directory_Content;
     
-    --  procedure Change_Current_Directory (Sgf : in out Sgf) is
-    --      path_name : Unbounded_String;
-    --  begin
-    --      Skip_Line;
-    --      path_name := Get_File_Path_Name;
-    --      Current_Directory(Sgf,path_name);
-    --      if SU.Length(path_name)=0 then
-    --          Current_Directory(Sgf);
-    --      else
-    --          Current_Directory(Sgf,path_name);
-    --      end if;
-    --  exception
-    --      when E : Empty_Path | Dir_Not_Found | Not_A_File =>
-    --          put_line("--------------------------------------------");
-    --          put_line(" !!! "& Exception_Message(E) &" !!!");
-    --          Change_File_Size(Sgf);
-    end menu;
+    procedure Change_Current_Directory (Sgf : in out T_Sgf) is
+        path_name : Unbounded_String;
+    begin
+        Skip_Line;
+        path_name := Get_File_Path_Name;
+        
+        if SU.Length(path_name)=0 then
+            Current_Directory(Sgf);
+        else
+            Current_Directory(Sgf,SU.To_String(path_name));
+        end if;
+        put_line("Current directory successfully changed to " & Get_Current_Directory(Sgf));
+        put_line("--------------------------------------------");
+    exception
+        when E : Empty_Path | Dir_Not_Found | Not_A_Dir =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Change_Current_Directory(Sgf);
+    end Change_Current_Directory;
+end menu;
