@@ -17,7 +17,7 @@ package sgf is
     -- Create a new file based on the path name given (relative and absolute path included) 
     procedure Create_File(Sgf : in  out T_SGF;
                           Path : in String;
-                          Size : in Integer);
+                          Size : in Long_Long_Integer);
    
     -- Create a new directory based on the path name given (relative and absolute path included)
     procedure Create_Directory(Sgf : in  out T_SGF;
@@ -46,7 +46,7 @@ package sgf is
                                  Archive_Path_Name : in String;
                                  Dir_To_Be_Archived : in String) ;
     
-    function Get_Size (Sgf : in out T_SGF ; Path : in String; IsDirectory : in Boolean) return Integer;
+    function Get_Size (Sgf : in out T_SGF ; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer;
     function Get_Name (Sgf : in out T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
     
 
@@ -59,12 +59,13 @@ package sgf is
     Dot_Name_Error : exception;
     Invalid_Archive_Path : exception;
 private
+    SIZE_LIMIT : Constant Long_Long_Integer := 1000000000000;
     type T_Node;
     type T_Pointer_Node is access T_Node;
     type T_Node is
        record
            Name : Unbounded_String;
-           Size: Integer;
+           Size: Long_Long_Integer;
            IsDirectory : Boolean;
            Child : T_Pointer_Node;
            Parent : T_Pointer_Node;
@@ -90,7 +91,8 @@ private
     Not_A_File : exception;
     File_Exists_Error : exception;
     File_Name_Is_Directory_Error : exception;
-    
+    Remove_Root : exception;
+    Size_Limit_Reach : exception;
     
     procedure Validate_Name (Name : in String);
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node;
@@ -102,7 +104,7 @@ private
     
     function Archive_Directory_Recursive (Sgf : in out T_SGF;
                                           node : in T_Pointer_Node;
-                                          res : in Integer) return Integer ;
+                                          res : in Long_Long_Integer) return Long_Long_Integer ;
     function List_Files_Recursive(SGF : in out T_SGF; 
                                   node : in T_Pointer_Node; 
                                   res : in Unbounded_String; 
@@ -115,5 +117,6 @@ private
                                     Target_Path : out Unbounded_String;
                                     Zip_Name : out Unbounded_String);
     
+    function Get_Total_Size(Sgf : in out T_SGF) return Long_Long_Integer;
     
 end sgf;

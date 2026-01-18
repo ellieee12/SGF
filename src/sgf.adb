@@ -1,17 +1,13 @@
 with GNAT.RegExp; use GNAT.RegExp;
-with Ada.Text_IO;          use Ada.Text_IO;
-with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Unchecked_Deallocation;
-with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
+with GNAT.Regpat; use GNAT.Regpat;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Strings.Unbounded.Aux; use Ada.Strings.Unbounded.Aux;
-with GNAT.Regpat;         use GNAT.Regpat;
+with Ada.Unchecked_Deallocation;
+with Text_IO; use Text_IO;
 
 package body sgf is
     package SU renames Ada.Strings.Unbounded;
-
+    
     procedure Free is
       new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
     
@@ -30,9 +26,9 @@ package body sgf is
             start := path'First;
         end if;
         for I in start .. path'Last loop
-            if (I = path'Last and then path(I) /= '/') or else (I /= path'Last and then path(I+1) = '/') then
+            if I = path'Last or else path(I) = '/' then
                 declare
-                    part : constant String := path(Start .. I);
+                    part : constant String := (if path(I) = '/' then path(Start .. I-1) else path(Start .. I));
                     has_glob : Constant Boolean := (for some C of part => C = '*' or else C = '?');
                 begin
                     if part = ".." then
@@ -42,7 +38,8 @@ package body sgf is
                         
                     elsif part /= "." then
                         temp_node := temp_node.all.Child;
-                        while temp_node /= Null and then ((not temp_node.all.IsDirectory and then (I /= path'Last or else onlyDirectory)) -- skip all file, until on the last of the path wich may be kept if not looking for a directory 
+                        while temp_node /= Null and then ((not temp_node.all.IsDirectory and then (I /= path'Last or else onlyDirectory or else (I = path'Last and then path(path'Last) = '/'))) -- skip all file, until on the last of the path wich may be kept if not looking for a directory
+                                                          or else (temp_node.all.IsDirectory and then (I = path'Last and then not onlyDirectory)) -- skip directories at the end if not looking for a directory
                                                           or else (if has_glob then not Match(SU.To_String(temp_node.all.Name), Compile(part, True)) -- if the path contain regex, use it to found the correct node
                                                           else temp_node.all.Name /= Part)) loop -- else, use a simple comparaison
                             temp_node := temp_node.all.Next;
@@ -51,7 +48,7 @@ package body sgf is
                             raise Dir_Not_Found with "The path contains an unknown directory!";
                         end if;
                     end if;
-                    start := I + 2;
+                    start := I + 1;
                 end;
             end if;
         end loop;
@@ -156,6 +153,9 @@ package body sgf is
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String) is
         temp_node : T_Pointer_Node;
     begin
+        if path = "/" then
+            raise Remove_Root with "Cannot remove the root !";
+        end if;
         temp_node := Get_Node_From_Path(SGF, path, True);
         if temp_node.all.Before /= Null then
             temp_node.all.Before.Next := temp_node.Next;
@@ -243,7 +243,7 @@ package body sgf is
     begin
         temp_node := Get_Node_From_Path(SGF, path, False);
         declare
-            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+            correct_new_path : constant String := (if new_path(New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
         begin
             Create_File(SGF, correct_new_path, temp_node.all.Size);
         end;
@@ -254,7 +254,7 @@ package body sgf is
     begin
         temp_node := Get_Node_From_Path(SGF, path, True);
         declare
-            correct_new_path : constant String := (if new_path (New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
+            correct_new_path : constant String := (if new_path(New_Path'Last) = '/' then new_path else new_path & "/") & SU.To_String(temp_node.all.Name);
         begin
             Create_Directory(SGF, correct_new_path);
             temp_node := temp_node.all.Child;
@@ -320,13 +320,16 @@ package body sgf is
    
     procedure Create_File(Sgf : in  out T_SGF;
                           Path : in String;
-                          Size : in Integer) is
+                          Size : in Long_Long_Integer) is
         Negative_Size_Error, Empty_Name_Error: Exception;
         current_child, new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
         Name,Target_Path,Path_Unbounded : Unbounded_String;
         L, K : Integer;
     begin
+        if Get_Total_Size(Sgf) + size > SIZE_LIMIT then
+            raise Size_Limit_Reach with "Stockage insufisant !";
+        end if;
         Path_Unbounded := SU.To_Unbounded_String(Path);
         if Size < 0 then
             raise Negative_Size_Error;
@@ -579,7 +582,7 @@ package body sgf is
                                  Archive_Path_Name : in String;
                                  Dir_To_Be_Archived : in String) is
         temp_node : T_Pointer_Node;
-        res : Integer;
+        res : Long_Long_Integer;
         archive_name, new_path_name : Unbounded_String;
     begin
         -- Verify if directory exists
@@ -602,9 +605,9 @@ package body sgf is
     
     function Archive_Directory_Recursive (Sgf : in out T_SGF;
                                           node : in T_Pointer_Node;
-                                          res : in Integer) return Integer is
+                                          res : in Long_Long_Integer) return Long_Long_Integer is
         temp_node : T_Pointer_Node;
-        temp_res : Integer;
+        temp_res : Long_Long_Integer;
     begin
         temp_res := 0;
         temp_node := node.all.Child;
@@ -626,7 +629,7 @@ package body sgf is
         return SU.To_String(Get_Node_From_Path(Sgf,Path,IsDirectory).all.Name);
     end Get_Name;
    
-    function Get_Size (Sgf : in out T_SGF; Path : in String; IsDirectory : in Boolean) return Integer is
+    function Get_Size (Sgf : in out T_SGF; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(Sgf,Path,IsDirectory);
@@ -636,6 +639,32 @@ package body sgf is
             return temp_node.all.Size;
         end if;
     end Get_Size;
+    
+    -- if we got time, this is the structure other recursive could use instead of calling themself again
+    function Get_Total_Size(Sgf : in out T_SGF) return Long_Long_Integer is
+        temp_node : T_Pointer_Node := Sgf.Root.all.Child;
+        used_size : Long_Long_Integer := 0;
+    begin
+        while temp_node /= null loop
+            if temp_node.all.IsDirectory then
+                if temp_node.all.Child /= Null then
+                    temp_node := temp_node.all.Child;
+                else
+                    while temp_node.all.Next /= Null and then temp_node.all.Parent /= Null loop
+                        temp_node := temp_node.all.Parent;
+                    end loop;
+                    temp_node := temp_node.all.Next;
+                end if;
+            else
+                used_size := used_size + temp_node.all.Size;
+                while temp_node.all.Next /= Null and then temp_node.all.Parent /= Null loop
+                    temp_node := temp_node.all.Parent;
+                end loop;
+                temp_node := temp_node.all.Next;
+            end if; 
+        end loop;
+        return used_size;
+    end Get_Total_Size;
     
     
 end sgf;
