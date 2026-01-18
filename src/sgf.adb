@@ -641,7 +641,7 @@ package body sgf is
     end Get_Size;
     
     -- if we got time, this is the structure other recursive could use instead of calling themself again
-    function Get_Total_Size(Sgf : in out T_SGF) return Long_Long_Integer is
+    function Get_Total_Size(Sgf : in T_SGF) return Long_Long_Integer is
         temp_node : T_Pointer_Node := Sgf.Root.all.Child;
         used_size : Long_Long_Integer := 0;
     begin

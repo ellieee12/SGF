@@ -117,6 +117,6 @@ private
                                     Target_Path : out Unbounded_String;
                                     Zip_Name : out Unbounded_String);
     
-    function Get_Total_Size(Sgf : in out T_SGF) return Long_Long_Integer;
+    function Get_Total_Size(Sgf : in T_SGF) return Long_Long_Integer;
     
 end sgf;
