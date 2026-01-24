@@ -353,22 +353,27 @@ package body sgf is
                             Pattern => "/",
                             From => L-1,
                             Going => Ada.Strings.Backward);
+                Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L-1));
             else
                 K := Index (Source => Path_Unbounded,
                             Pattern => "/",
                             From => L,
                             Going => Ada.Strings.Backward);
+                Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
             end if;
             Target_Path := SU.To_Unbounded_String(SU.Slice(Path_Unbounded,1,K-1));
-            Name := SU.To_Unbounded_String(SU.Slice(Path_Unbounded ,K+1,L));
             
-            Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path), True);
+            if Target_Path = "" then
+                head:=Sgf.Current;
+            else
+                Head := Get_Node_From_Path(Sgf,SU.To_String(Target_Path), True);
+            end if;
         end if;
         -- get node of the target directory
         
         -- verify that the file name is does not exists in the directory
         -- if file name exists, verify that it is not a directory 
-        Verify_File_Name_Existence(head,SU.To_String(Name));
+        Verify_File_Name_Existence(head.all.Child,SU.To_String(Name));
         
         -- validate file name
         Validate_Name(SU.To_String(Name));
@@ -396,23 +401,20 @@ package body sgf is
         
         if Current_Node /= null then
             temp_node := Current_Node;
+            
             while temp_node /= null loop
                 if temp_node.all.Name = Name then
-                    if temp_node.all.IsDirectory then
-                        raise File_Name_Is_Directory_Error;
-                    else
+                    if not temp_node.all.IsDirectory then
                         raise File_Exists_Error;
                     end if;
-                else
-                    temp_node := temp_node.all.Next;
                 end if;
+                temp_node := temp_node.all.Next;
             end loop;
         end if;
     end Verify_File_Name_Existence;
       
     procedure Create_Directory (Sgf : in  out T_SGF;
                                 Path: in String) is
-        Negative_Size_Error, Empty_Name_Error: Exception;
         current_child, new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
         Name,Target_Path,Path_Unbounded : Unbounded_String;
@@ -426,6 +428,9 @@ package body sgf is
                        Pattern => "/",
                        From => L,
                        Going => Ada.Strings.Backward);
+        if Path = "/" then 
+            raise Forbidden_Character_Error;
+        end if;
         -- if path name does not contain "/" then we create the a directory in the current directory
         if K = 0 then
             head:=Sgf.Current;
@@ -465,7 +470,6 @@ package body sgf is
             while tail.all.Next /= null loop
                 tail := tail.all.Next;
             end loop;
-
             tail.all.Next := new_node;
             new_node.all.Before := tail;
         end if;
