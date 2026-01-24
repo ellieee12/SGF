@@ -670,5 +670,16 @@ package body sgf is
         return used_size;
     end Get_Total_Size;
     
+    procedure Change_File_Size(SGF : in out T_SGF; path : in String; size : in Long_Long_Integer) is
+        temp_node : T_Pointer_Node;
+    begin
+        if size < 0  then
+            raise Negative_Size_Error;
+        end if;
+        
+        temp_node := Get_Node_From_Path(Sgf,Path,False);
+        temp_node.all.Size := size;
+    end Change_File_Size;
+    
     
 end sgf;

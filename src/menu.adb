@@ -2,6 +2,7 @@ with SGF; use SGF;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
+with Ada.Long_Long_Integer_Text_IO; use Ada.Long_Long_Integer_Text_IO;
 package body menu is
     package SU renames Ada.Strings.Unbounded;
 
@@ -31,8 +32,7 @@ package body menu is
                     when 12 => Copy_Directory(Sgf);
                     when 13 => Archive_Directory(Sgf);
                     when 99 => null;
-                    when others => 
-                        raise Invalid_Choice;
+                    when others => raise Invalid_Choice;
                 end case;
                         
                 exit when choice = 99;
@@ -78,7 +78,7 @@ package body menu is
         put_line("--------------------------------------------");
     end Print_Current_Working_Directory;
     
-    procedure Validate_File_Size(file_size : out Integer) is
+    procedure Validate_File_Size(file_size : out Long_Long_Integer) is
     begin
         loop
             begin
@@ -116,7 +116,7 @@ package body menu is
     procedure Validate_Create_File_Or_Directory(Sgf : in out T_Sgf ;
                                                 path_name: in out Unbounded_String;
                                                 file_path : in out Unbounded_String;
-                                                file_size : in Integer;
+                                                file_size : in Long_Long_Integer;
                                                 isDirectory : in Boolean) is
         replacement : Unbounded_String;
     begin
@@ -188,7 +188,7 @@ package body menu is
     
     procedure Add_New_File (Sgf : in out T_Sgf) is
         path_name,file_path : Unbounded_String;
-        file_size : Integer;
+        file_size : Long_Long_Integer;
     begin
         put_line("--------------------------------------------");
         put("What is the destination path (if empty, file will be saved in current working directory)? ");
@@ -214,7 +214,7 @@ package body menu is
     
     procedure Change_File_Size (Sgf : in out T_SGF) is
         file_path : Unbounded_String;
-        file_size : Integer;
+        file_size : Long_Long_Integer;
     begin
         file_path := Get_Path_Name("What is the path of target file? ");
         Validate_File_Size(file_size);

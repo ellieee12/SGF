@@ -15,7 +15,7 @@ private
     procedure Validate_Create_File_Or_Directory(Sgf : in out T_Sgf ;
                                                 path_name: in out Unbounded_String;
                                                 file_path : in out Unbounded_String;
-                                                file_size : in Integer;
+                                                file_size : in Long_Long_Integer;
                                                 isDirectory : in Boolean);
     procedure Add_New_Directory (Sgf : in out T_Sgf);
     procedure Change_File_Size (Sgf : in out T_SGF) ;
