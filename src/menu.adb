@@ -7,6 +7,7 @@ package body menu is
 
     procedure Start_Menu (Sgf : in out T_SGF) is
         choice : Natural:=0;
+        Invalid_Choice : exception;
     begin
         
         loop 
@@ -23,8 +24,15 @@ package body menu is
                     when 5 => Change_Current_Directory(Sgf);
                     when 6 => Print_Directory_Content(Sgf,False);
                     when 7 => Print_Directory_Content(Sgf,True);
-                    when 8 => Remove_file(Sgf);
-                    when others => null;
+                    when 8 => Remove_File_Or_Directory(Sgf,False);
+                    when 9 => Remove_File_Or_Directory(Sgf,True);
+                    when 10 => Move_Or_Rename(Sgf);
+                    when 11 => Copy_File(Sgf);
+                    when 12 => Copy_Directory(Sgf);
+                    when 13 => Archive_Directory(Sgf);
+                    when 99 => null;
+                    when others => 
+                        raise Invalid_Choice;
                 end case;
                         
                 exit when choice = 99;
@@ -34,6 +42,10 @@ package body menu is
                     put_line("Invalid choice, please choose another option");
                     put_line("--------------------------------------------");
                     Skip_Line;
+                when Invalid_Choice => 
+                    put_line("--------------------------------------------");
+                    put_line("Invalid choice, please choose another option");
+                    put_line("--------------------------------------------");
             end;
         end loop;
     
@@ -51,9 +63,9 @@ package body menu is
         put_line("7 - List recursively all directory content");
         put_line("8 - Remove a file");
         put_line("9 - Remove a directory");
-        put_line("10 - Move a file or a directory");
-        put_line("11 - Rename a file or a directory");
-        put_line("12 - Copy a file or a directory");
+        put_line("10 - Move or rename a file or a directory");
+        put_line("11 - Copy a file");
+        put_line("12 - Copy a directory");
         put_line("13 - Archive a directory");
         put_line("99 - Quit menu");
         put_line("Please enter the number to the corresponding command");
@@ -220,7 +232,6 @@ package body menu is
     function Get_Path_Name (msg : in String) return Unbounded_String is
         file_path : Unbounded_String;
     begin
-        put_line("--------------------------------------------");
         put(msg);
         Get_Line(file_path);
         return file_path;
@@ -253,7 +264,7 @@ package body menu is
     procedure Change_Current_Directory (Sgf : in out T_Sgf) is
         path_name : Unbounded_String;
     begin
-        
+        put_line("--------------------------------------------");
         path_name := Get_Path_Name("What is the path of directory? ");
         
         if SU.Length(path_name)=0 then
@@ -270,18 +281,89 @@ package body menu is
             Change_Current_Directory(Sgf);
     end Change_Current_Directory;
     
-    procedure Remove_File(Sgf : in out T_SGF) is
-        path_name : Unbounded_String;
+    procedure Remove_File_Or_Directory(Sgf : in out T_SGF;isDirectory : in Boolean) is
+        path_name: Unbounded_String;
+        msg : Unbounded_String;
     begin
-        path_name := Get_Path_Name("What is the path of target file? ");
-        Remove(Sgf,SU.To_String(path_name));
-        put_line("File successfully deleted");
+        if isDirectory then
+            put_line("--------------------------------------------");
+            path_name := Get_Path_Name("What is the path of target directory? ");
+            msg := SU.To_Unbounded_String("Directory successfully deleted.");
+            Remove_Recursive(Sgf,SU.To_String(path_name));
+        else
+            put_line("--------------------------------------------");
+            path_name := Get_Path_Name("What is the path of target file? ");
+            msg := SU.To_Unbounded_String("File successfully deleted");
+            Remove(Sgf,SU.To_String(path_name));
+        end if;
+        put_line(msg);
         put_line("--------------------------------------------");
     exception
         when E : Empty_Path | Dir_Not_Found | Not_A_File =>
             put_line("--------------------------------------------");
             put_line(" !!! "& Exception_Message(E) &" !!!");
-            Remove_File(Sgf);
-    end Remove_File;
+            Remove_File_Or_Directory(Sgf,isDirectory);
+    end Remove_File_Or_Directory;
     
+    procedure Move_Or_Rename (Sgf : in out T_Sgf) is
+        path_name, new_path_name : Unbounded_String;
+    begin
+        put_line("--------------------------------------------");
+        path_name := Get_Path_Name("What is the initial path to file or directory? ");
+        new_path_name := Get_Path_Name("What is the new path to file or directory?");
+        Move(Sgf,SU.To_String(path_name),SU.To_String(new_path_name));
+        put_line("Operation executed successfully");
+        put_line("--------------------------------------------");
+    exception
+        when E : Empty_Path | Dir_Not_Found | Not_A_Dir | Not_A_File =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Move_Or_Rename(Sgf);
+    end Move_Or_Rename;
+    
+    procedure Copy_File (Sgf : in out T_SGF) is
+        src_path_name, dest_path_name : Unbounded_String;
+    begin
+        put_line("--------------------------------------------");
+        src_path_name := Get_Path_Name("What is the source path to file to be copied? ");
+        dest_path_name := Get_Path_Name("What is the destination path ? ");
+        Copy(Sgf,SU.To_String(src_path_name),SU.To_String(dest_path_name));
+        put_line("Operation executed successfully");
+        put_line("--------------------------------------------");
+    exception
+        when E : Empty_Path | Dir_Not_Found | Not_A_Dir | Not_A_File =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Copy_File(Sgf);
+    end Copy_File;
+    
+    procedure Copy_Directory (Sgf : in out T_SGF) is
+        src_path_name, dest_path_name : Unbounded_String;
+    begin
+        put_line("--------------------------------------------");
+        src_path_name := Get_Path_Name("What is the source path to directory to be copied? ");
+        dest_path_name := Get_Path_Name("What is the destination path ? ");
+        Copy_Recursive(Sgf,SU.To_String(src_path_name),SU.To_String(dest_path_name));
+        put_line("Operation executed successfully");
+        put_line("--------------------------------------------");
+    exception
+        when E : Empty_Path | Dir_Not_Found | Not_A_Dir =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Copy_Directory(Sgf);
+    end Copy_Directory; 
+    
+    procedure Archive_Directory (Sgf : in out T_SGF) is
+        path_name, dest_path_name : Unbounded_String;
+    begin
+        put_line("--------------------------------------------");
+        path_name := Get_Path_Name("What is the path to the directory to be archived? ");
+        dest_path_name := Get_Path_Name("What is the path and name of archived directory? (If no path given, directory is archived in currend working directory)");
+        Archive_Directory(Sgf,SU.To_String(dest_path_name),SU.To_String(path_name));
+    exception
+        when E: others =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+            Archive_Directory(Sgf);
+    end Archive_Directory;
 end menu;

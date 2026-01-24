@@ -21,5 +21,9 @@ private
     procedure Change_File_Size (Sgf : in out T_SGF) ;
     function Get_Path_Name (msg : String) return Unbounded_String;
     procedure Change_Current_Directory (Sgf : in out T_Sgf);
-    procedure Remove_File(Sgf : in out T_SGF);
+    procedure Remove_File_Or_Directory(Sgf : in out T_SGF;isDirectory : in Boolean);
+    procedure Move_Or_Rename (Sgf : in out T_Sgf);
+    procedure Copy_Directory (Sgf : in out T_SGF);
+    procedure Copy_File (Sgf : in out T_SGF);
+    procedure Archive_Directory (Sgf : in out T_SGF); 
 end menu;
