@@ -1,4 +1,13 @@
 package body terminal is
+    
+    package SU renames Ada.Strings.Unbounded;
+    
+    -- Tableau de taille ind�finie (pour les commandes)
+    package String_Vectors is
+            new Ada.Containers.Vectors
+                    (Index_Type   => Natural,
+                     Element_Type => Unbounded_String);
+    use String_Vectors;
    
     procedure Start_Terminal(SGF : in out T_SGF) is
         input : Unbounded_String;
@@ -26,7 +35,7 @@ package body terminal is
                 Start : Positive := S'First;
             begin
                 command.Clear;
-                
+                -- R�cup�rer la commande, les arguments et ses param�tres
                 for I in S'Range loop
                     if S (I) = ' ' then
                         if Start <= I - 1 then
@@ -35,7 +44,7 @@ package body terminal is
                         Start := I + 1;
                     end if;
                 end loop;
-                
+                -- r�cup�rere le dernier
                 if Start <= S'Last then
                     command.Append(To_Unbounded_String(S(Start .. S'Last)));
                 end if;
@@ -53,7 +62,7 @@ package body terminal is
                     
                 elsif cmd = "size" then
                     Verify_Nb_Argument(command.Last_Index, 1, 1);
-                    Null;
+                    Change_File_Size(Sgf, To_String(command(command.First_Index+1)), Long_Long_Integer'Value(To_String(command(command.First_Index + 2))));
                     
                 elsif cmd = "mkdir" then
                     Verify_Nb_Argument(command.Last_Index, 1, 1);
