@@ -139,7 +139,7 @@ package body terminal is
     procedure Verify_Nb_Argument(nb : in Integer; max_nb : in Integer; min_nb : in Integer := 0) is
     begin
         if nb > max_nb then
-            raise Too_Much_Argument with "there is too much argument on this command !"; 
+            raise Too_Many_Argument with "there is too many argument on this command !"; 
         elsif nb < min_nb then
             raise Not_Enough_Argument with "there is not enough argument on this command !";
         end if;

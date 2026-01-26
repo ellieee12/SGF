@@ -7,6 +7,6 @@ package terminal is
     procedure Verify_Nb_Argument(nb : in Integer; max_nb : in Integer; min_nb : in Integer := 0);
         
 private
-    Too_Much_Argument : exception;
+    Too_Many_Argument : exception;
     Not_Enough_Argument : exception;
 end terminal;

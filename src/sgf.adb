@@ -325,13 +325,7 @@ package body sgf is
         end;
     end Copy_Recursive;
 
-    function Is_Empty (Sgf : in out T_SGF; Path : in String) return boolean is
-        temp_node : T_Pointer_Node;
-    begin
-        temp_node := Get_Node_From_Path(Sgf,Path, True);
-        return temp_node.all.Child/=null;
-    end Is_Empty;
-   
+  
     procedure Initialize (Sgf : out T_SGF) is 
       
     begin
@@ -372,7 +366,6 @@ package body sgf is
         -- extract file name
         -- if path given ends with / a
         L := Path'Length;
-        -- TODO : manage empty path
         K := SU.Index (Source => Path_Unbounded,
                        Pattern => "/",
                        From => L,
@@ -550,9 +543,9 @@ package body sgf is
             if Character'Pos(c)<32 or else Character'Pos(c)=127 then
                 raise Control_Character_Error;
             end if;
-            -- Rule 4 : Cannot contain symboles / \ : * ? < > |
+            -- Rule 4 : Cannot contain symboles / \ : * ? < > | &
             case c is 
-                when '\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' =>
+                when '\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' | '&' =>
                     raise Forbidden_Character_Error;
                 when others =>
                     null;
@@ -678,7 +671,7 @@ package body sgf is
     begin
         temp_node := Get_Node_From_Path(Sgf,Path,IsDirectory);
         if temp_node.all.IsDirectory then 
-            return 0;
+            return 10000;
         else
             return temp_node.all.Size;
         end if;
