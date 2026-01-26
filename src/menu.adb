@@ -258,10 +258,9 @@ package body menu is
           and SU.To_String(print_details) /= "n"then
             raise Invalid_Response with "Invalid response to whether you would like to print content details.";
         end if;
-       
         if recursive then
             if SU.Length(path_name)=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
-                put_line(List_Files_Recursive(Sgf,".",True));
+                put_line(List_Files_Recursive(Sgf,".",true));
             elsif SU.Length(path_name)/=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
                 put_line(List_Files_Recursive(Sgf,SU.To_String(path_name),True));
             elsif SU.Length(path_name)=0 and (SU.To_String(print_details) = "N" or SU.To_String(print_details) = "n") then

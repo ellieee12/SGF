@@ -105,7 +105,15 @@ package body sgf is
             if temp_node.all.IsDirectory then
                 res :=  res & "\-- " & temp_node.all.Name&ASCII.LF;
             else
-                res :=  res & "|-- " & temp_node.all.Name & ASCII.LF;
+                if listSize then
+                    res :=  res & "|-- " 
+                      & temp_node.all.Name 
+                      & ASCII.HT
+                      & SU.To_Unbounded_String(Long_Long_Integer'Image(temp_node.all.Size)) 
+                      & ASCII.LF;
+                else
+                    res :=  res & "|-- " & temp_node.all.Name & ASCII.LF;
+                end if;
             end if;
             if temp_node.all.Child /= Null then
                 res := res & List_Files_Recursive(SGF, temp_node, res, 1, listSize);
