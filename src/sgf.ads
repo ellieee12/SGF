@@ -29,11 +29,11 @@ package sgf is
     -- List the files and directories of a directory as indicated by a given path name
     -- If no path name given, list the files and directories of the current working directory
     function List_Files(SGF : in out T_SGF; path : in String := ".";
-                       listSize : in boolean := False) return String;
+                        listSize : in boolean := False) return String;
     
     -- List recursively all the files and directory of the current working directory 
     function List_Files_Recursive(SGF : in out T_SGF; path : in String := ".";
-                                 listSize : in Boolean := False) return String;
+                                  listSize : in Boolean := False) return String;
     
     procedure Remove(SGF : in out T_SGF; path : in String);
     
@@ -74,22 +74,32 @@ private
     type T_Node;
     type T_Pointer_Node is access T_Node;
     type T_Node is
-       record
-           Name : Unbounded_String;
-           Size: Long_Long_Integer;
-           IsDirectory : Boolean;
-           Child : T_Pointer_Node;
-           Parent : T_Pointer_Node;
-           Next : T_Pointer_Node;
-           Before : T_Pointer_Node;
-       end record;
+        record
+            Name : Unbounded_String;
+            Size: Long_Long_Integer;
+            Address : Long_Long_Integer;
+            IsDirectory : Boolean;
+            Child : T_Pointer_Node;
+            Parent : T_Pointer_Node;
+            Next : T_Pointer_Node;
+            Before : T_Pointer_Node;
+        end record;
     
+    type T_Memory;
+    type T_Pointer_Memory is access T_Memory;
+    type T_Memory is
+        record
+            Address : Long_Long_Integer;
+            Size : Long_Long_Integer;
+            Next_Block : T_Pointer_Memory;
+        end record;
     
     type T_SGF is
-       record
-           Root : T_Pointer_Node;
-           Current : T_Pointer_Node;
-       end record;
+        record
+            Root : T_Pointer_Node;
+            Current : T_Pointer_Node;
+            Memory : T_Pointer_Memory;
+        end record;
    
    
     --  Control_Character_Error : exception;
@@ -124,5 +134,8 @@ private
     
     function Get_Total_Size(Sgf : in T_SGF) return Long_Long_Integer;
     
+    function Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer) return Long_Long_Integer;
+    
+    procedure Remove_Block_Memory(Sgf : in T_SGF; node : in out T_Pointer_Node);
     
 end sgf;
