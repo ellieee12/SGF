@@ -261,11 +261,11 @@ package body menu is
        
         if recursive then
             if SU.Length(path_name)=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
-                put_line(List_Files_Recursive(Sgf,listSize=>True));
+                put_line(List_Files_Recursive(Sgf,".",True));
             elsif SU.Length(path_name)/=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
                 put_line(List_Files_Recursive(Sgf,SU.To_String(path_name),True));
             elsif SU.Length(path_name)=0 and (SU.To_String(print_details) = "N" or SU.To_String(print_details) = "n") then
-                put_line(List_Files_Recursive(Sgf,listSize=>False));
+                put_line(List_Files_Recursive(Sgf,".",False));
             else
                 put_line(List_Files_Recursive(Sgf,SU.To_String(path_name),False)); 
             end if;

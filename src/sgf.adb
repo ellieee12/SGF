@@ -75,16 +75,14 @@ package body sgf is
         res : Unbounded_String;
     begin
         res := SU.To_Unbounded_String("");
-        temp_node := Get_Node_From_Path(SGF, path, True);
-        temp_node := temp_node.all.Child;
+        temp_node := Get_Node_From_Path(SGF, path, True).all.Child;
         while temp_node /= null loop
             res := res & temp_node.all.Name ;
             if listSize then
                 res := res & ASCII.HT
-                  & SU.To_Unbounded_String(Long_Long_Integer'Image(temp_node.all.Size));
-                append(res,ASCII.LF);
-                temp_node := temp_node.all.Next;
+                  & SU.To_Unbounded_String(Long_Long_Integer'Image(temp_node.all.Size))&ASCII.LF;
             end if;
+            temp_node := temp_node.all.Next;
         end loop;
         return SU.To_String(res);
     end List_Files;
