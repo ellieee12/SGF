@@ -3,6 +3,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
 with Ada.Long_Long_Integer_Text_IO; use Ada.Long_Long_Integer_Text_IO;
+with Ada.Characters.Handling; use Ada.Characters.Handling;
 package body menu is
     package SU renames Ada.Strings.Unbounded;
 
@@ -241,24 +242,50 @@ package body menu is
     
     procedure Print_Directory_Content(Sgf : in out T_SGF; recursive : in boolean) is
         path_name : Unbounded_String;
+        print_details : Unbounded_String;
+        Invalid_Response : exception;
     begin
         put_line("--------------------------------------------");
         put("What is the path of target directory (if empty, content of current working directory will be printed)? ");
         Get_Line(path_name);
+        put("Would you like to print the details of the content? y - yes, n - no");
+        Get_Line(print_details);
+        
+   
+        if SU.To_String(print_details) /= "Y" 
+          and SU.To_String(print_details) /= "N"
+          and SU.To_String(print_details) /= "y"
+          and SU.To_String(print_details) /= "n"then
+            raise Invalid_Response with "Invalid response to whether you would like to print content details.";
+        end if;
+       
         if recursive then
-            if SU.Length(path_name)=0 then
-                put_line(List_Files_Recursive(Sgf));
+            if SU.Length(path_name)=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
+                put_line(List_Files_Recursive(Sgf,listSize=>True));
+            elsif SU.Length(path_name)/=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
+                put_line(List_Files_Recursive(Sgf,SU.To_String(path_name),True));
+            elsif SU.Length(path_name)=0 and (SU.To_String(print_details) = "N" or SU.To_String(print_details) = "n") then
+                put_line(List_Files_Recursive(Sgf,listSize=>False));
             else
-                put_line(List_Files_Recursive(Sgf,SU.To_String(path_name)));
+                put_line(List_Files_Recursive(Sgf,SU.To_String(path_name),False)); 
             end if;
         else
-            if SU.Length(path_name)=0 then
-                put_line(List_Files(Sgf));
+            if SU.Length(path_name)=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
+                put_line(List_Files(Sgf,listSize=>True));
+            elsif SU.Length(path_name)/=0 and (SU.To_String(print_details) = "Y" or SU.To_String(print_details) = "y") then
+                put_line(List_Files(Sgf,SU.To_String(path_name),True));
+            elsif SU.Length(path_name)=0 and (SU.To_String(print_details) = "N" or SU.To_String(print_details) = "n") then
+                put_line(List_Files(Sgf,listSize=>False));
             else
-                put_line(List_Files(Sgf,SU.To_String(path_name)));
+                put_line(List_Files(Sgf,SU.To_String(path_name),False)); 
             end if;
         end if;        
         put_line("--------------------------------------------");
+    exception
+        when E : others =>
+            put_line("--------------------------------------------");
+            put_line(" !!! "& Exception_Message(E) &" !!!");
+        Print_Directory_Content(Sgf,recursive);
     end Print_Directory_Content;
     
     procedure Change_Current_Directory (Sgf : in out T_Sgf) is
