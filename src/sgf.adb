@@ -1,15 +1,7 @@
-with GNAT.RegExp; use GNAT.RegExp;
-with GNAT.Regpat; use GNAT.Regpat;
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Unchecked_Deallocation;
-with Text_IO; use Text_IO;
-
 package body sgf is
-    package SU renames Ada.Strings.Unbounded;
     
     procedure Free is
-      new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
+            new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
     
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
@@ -629,9 +621,7 @@ package body sgf is
         Validate_Name(SU.To_String(archive_name));
         temp_node := temp_node.all.Child;
         while temp_node /= null loop
-            if not temp_node.all.IsDirectory then
-                res := res + temp_node.all.Size;
-            end if;
+            res := res + temp_node.all.Size;
             if temp_node.all.Child /= Null then
                 res := res + Archive_Directory_Recursive(Sgf,temp_node,res);
             end if;
@@ -735,14 +725,26 @@ package body sgf is
         end loop;
         if temp_block.all.Address + temp_block.all.Size = node.all.Address then
             temp_block.all.Size := temp_block.all.Size + node.all.Size;
-            if temp_block.all.Next_Block /= Null and then temp_block.all.Address + temp_block.all.Size = temp_block.all.Next_Block.all.Address then
-                temp_block.all.Size := temp_block.all.Size + temp_block.all.Next_Block.all.Size;
-                temp_block.all.Next_Block := temp_block.all.Next_Block.all.Next_Block;
-            end if;
         else
             temp_block.Next_Block := new T_Memory'(node.all.Address, node.all.Size, temp_block.all.Next_Block);
+            temp_block := temp_block.all.Next_Block;
+        end if;
+        if temp_block.all.Next_Block /= Null and then temp_block.all.Address + temp_block.all.Size = temp_block.all.Next_Block.all.Address then
+            temp_block.all.Size := temp_block.all.Size + temp_block.all.Next_Block.all.Size;
+            temp_block.all.Next_Block := temp_block.all.Next_Block.all.Next_Block;
         end if;
         Free(node);
     end Remove_Block_Memory;
+    
+    function Get_Block_Size(nb : in Integer; Sgf : in T_SGF) return Long_Long_Integer is
+        temp_block : T_Pointer_Memory := Sgf.Memory;
+        count : Integer := 0;
+    begin
+        while count /= nb and then temp_block /= Null loop
+            temp_block := temp_block.all.Next_Block;
+            count := count + 1;
+        end loop;
+        Return temp_block.all.Size;
+    end Get_Block_Size;
     
 end sgf;

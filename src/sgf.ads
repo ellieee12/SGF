@@ -1,9 +1,15 @@
-with Ada.Strings.Unbounded;
-use Ada.Strings.Unbounded;
-package sgf is
+with GNAT.RegExp; use GNAT.RegExp;
+with GNAT.Regpat; use GNAT.Regpat;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Unchecked_Deallocation;
+with Ada.Containers.Vectors;
+with Ada.Text_IO;          use Ada.Text_IO;
 
+package sgf is
+    package SU renames Ada.Strings.Unbounded;
+    
     type T_SGF is private;
-    type T_Pointer_Node is private;
     
     -- Initialise SGF, initialise memory block and create root as directory
     -- Post => Sgf.Root.all.Name = "" and Sgf.Root.all.Size = 0
@@ -102,7 +108,11 @@ package sgf is
     -- Post => Get_Name'Result = Base_Name(Path)
     function Get_Name (Sgf : in out T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
    
-    -- Copy a directory to a target destination path
+   
+    function Get_Block_Size(nb : in Integer; Sgf : in T_SGF) return Long_Long_Integer;
+    
+
+     -- Copy a directory to a target destination path
     -- Pre => exists(path) and exists(new_path) and isDirectory(new_path) and isDirectory(path)
     -- Post => exists(path_to_copied_file)
     procedure Copy_Recursive(SGF : in out T_SGF; path : in String; new_path : in String);

@@ -1,8 +1,11 @@
 with Ada.Text_IO;          use Ada.Text_IO;
 with Ada.Integer_Text_IO;  use Ada.Integer_Text_IO;
 with SGF; use SGF;
+with Ada.Containers.Vectors;
+
 procedure test_sgf is
     Sgf : T_SGF;
+    
     procedure Construct_SGF_Example (Sgf : out T_SGF) is
         
     begin
@@ -25,7 +28,6 @@ procedure test_sgf is
         Create_Directory(Sgf,"/usr/local");
         Create_Directory(Sgf,"/usr/local/share");
         put(List_Files_Recursive(Sgf,"./",true));
-        put(List_Files(Sgf,"/home/user1/pim/tp/tp1",true));
         
         --  Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "/usr/local/share");
         --  Copy(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.py", "/usr/local/share");
@@ -140,7 +142,7 @@ procedure test_sgf is
         put_line("name:"&Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False));
         --  pragma Assert(Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False)="home.tar");
         --  put(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False));
-        pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False)=50);
+        pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False)=10050);
         put(List_Files_Recursive(Sgf,"./"));
         Remove(Sgf,"/home/user1/pim/projet/home.tar");
         
@@ -148,17 +150,48 @@ procedure test_sgf is
         Archive_Directory(Sgf, "/home/home.tar","/home");
         put(List_Files_Recursive(Sgf,"./"));
         pragma Assert(Get_Name(Sgf,"/home/home.tar",False)="home.tar");
-        pragma Assert(Get_Size(Sgf,"/home/home.tar",False)=50);
+        pragma Assert(Get_Size(Sgf,"/home/home.tar",False)=10050);
         Remove(Sgf,"/home/home.tar");
     end Archive_Directory_Test;
+    
+    procedure Memory_Management_Test (Sgf :out T_SGF) is
+    begin 
+        Construct_SGF_Example (Sgf);
+        pragma Assert(Get_Block_Size(0, sgf) = 999999909950);
+        Create_File(Sgf,"/home/user1/pim/tp/tp1/heavy_file.txt",10000000);
+        pragma Assert(Get_Block_Size(0, sgf) = 999989909950);
+        Remove(Sgf,"/home/user1/pim/tp/tp1/newton.adb");
+        pragma Assert(Get_Block_Size(0, sgf) = 999989909950);
+        pragma Assert(Get_Block_Size(1, sgf) = 10);
+    end Memory_Management_Test;
+    
+    procedure General_Scenario_Test (Sgf :out T_SGF) is
+    begin 
+        Construct_SGF_Example (Sgf);
+        Remove(Sgf, "/home/user1/pim/tp/tp1/newton.adb");
+        begin
+            Remove(Sgf, "/home/user1/pim/tp/tp1/newton.adb");
+            pragma Assert(False);
+        exception
+            when Dir_Not_Found => pragma Assert(True);
+        end;
+        Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "/usr/local/share/new_name");
+        pragma Assert(Get_Name(Sgf, "/usr/local/share/new_name", false) = "new_name");
+        Copy(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.py", "/usr/local/share");
+        pragma Assert(Get_Name(Sgf, "/usr/local/share/min_max_serie.py", false) = "min_max_serie.py");
+        Archive_Directory(Sgf, "/home/user1/pim/projet/home.tar","/home");
+        pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False)=10030);
+    end General_Scenario_Test;
 
     
 begin
     Construct_SGF_Example(SGF);
     -- Get_Current_Working_Directory_Test(Sgf);
-    --  Archive_Directory_Test(Sgf);
+    -- Archive_Directory_Test(Sgf);
     --  Create_Directory_Test(Sgf);
     --  Create_Directory_Exception_Test(Sgf);
     --  Extract_Archive_Directory_Test(Sgf);
+    -- Memory_Management_Test(Sgf);
+    General_Scenario_Test(Sgf);
 end test_sgf;
 

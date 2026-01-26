@@ -1,14 +1,8 @@
-with Ada.Text_IO;          use Ada.Text_IO;
-with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Containers.Vectors;
-
 package body terminal is
     
     package SU renames Ada.Strings.Unbounded;
     
-    -- Tableau de taille indéfinie (pour les commandes)
+    -- Tableau de taille indï¿½finie (pour les commandes)
     package String_Vectors is
             new Ada.Containers.Vectors
                     (Index_Type   => Natural,
@@ -41,7 +35,7 @@ package body terminal is
                 Start : Positive := S'First;
             begin
                 command.Clear;
-                -- Récupérer la commande, les arguments et ses paramètres
+                -- Rï¿½cupï¿½rer la commande, les arguments et ses paramï¿½tres
                 for I in S'Range loop
                     if S (I) = ' ' then
                         if Start <= I - 1 then
@@ -50,7 +44,7 @@ package body terminal is
                         Start := I + 1;
                     end if;
                 end loop;
-                -- récupérere le dernier
+                -- rï¿½cupï¿½rere le dernier
                 if Start <= S'Last then
                     command.Append(To_Unbounded_String(S(Start .. S'Last)));
                 end if;

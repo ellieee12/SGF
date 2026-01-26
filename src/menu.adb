@@ -1,9 +1,3 @@
-with SGF; use SGF;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
-with Ada.Long_Long_Integer_Text_IO; use Ada.Long_Long_Integer_Text_IO;
-with Ada.Characters.Handling; use Ada.Characters.Handling;
 package body menu is
     package SU renames Ada.Strings.Unbounded;
 
