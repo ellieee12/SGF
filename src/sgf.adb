@@ -168,8 +168,14 @@ package body sgf is
         temp_node := Get_Node_From_Path(SGF, path, False);
         if temp_node.all.Before /= Null then
             temp_node.all.Before.Next := temp_node.Next;
+            if temp_node.all.Next /= Null then
+                temp_node.all.Next.Before := temp_node.Before;
+            end if;
         else
             temp_node.all.Parent.Child := temp_node.Next;
+            if temp_node.all.Next /= Null then
+                temp_node.all.Next.Before := Null;
+            end if;
         end if;
         Remove_Block_Memory(Sgf, temp_node);
     end Remove;
@@ -183,8 +189,14 @@ package body sgf is
         temp_node := Get_Node_From_Path(SGF, path, True);
         if temp_node.all.Before /= Null then
             temp_node.all.Before.Next := temp_node.Next;
+            if temp_node.all.Next /= Null then
+                temp_node.all.Next.Before := temp_node.Before;
+            end if;
         else
             temp_node.all.Parent.Child := temp_node.Next;
+            if temp_node.all.Next /= Null then
+                temp_node.all.Next.Before := Null;
+            end if;
         end if;
         if temp_node.all.Child /= Null then
             temp_node := temp_node.all.Child;
@@ -353,7 +365,6 @@ package body sgf is
         L, K : Integer;
         address : Long_Long_Integer;
     begin
-        address := Create_Block_Memory(Sgf, size);
         Path_Unbounded := SU.To_Unbounded_String(Path);
         if Size < 0 then
             raise Negative_Size_Error;
@@ -401,6 +412,9 @@ package body sgf is
         
         -- validate file name
         Validate_Name(SU.To_String(Name));
+        
+        -- memory allocation of new file (give starting address)
+        address := Create_Block_Memory(Sgf, size);
         
         -- create file
         new_node := new T_Node'(Name,Size,address,False,null,head,null,null);
@@ -709,7 +723,6 @@ package body sgf is
     
     function Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer) return Long_Long_Integer is
         temp_block : T_Pointer_Memory := Sgf.Memory;
-        adress_of_node : Long_Long_Integer;
     begin
         while temp_block /= null and then temp_block.all.Size < size loop
             temp_block := temp_block.all.Next_Block;
@@ -717,14 +730,8 @@ package body sgf is
         if temp_block = Null then
             raise Size_Limit_Reach with "Stockage insufisant !";
         end if;
-        adress_of_node := temp_block.all.Address;
-        temp_block.all.Address := temp_block.all.Address + size;
-        temp_block := Sgf.Memory;
-        while temp_block /= null loop
-            Put_Line(Long_Long_Integer'Image(temp_block.all.Address) & "   " & Long_Long_Integer'Image(temp_block.all.Size));
-            temp_block := temp_block.all.Next_Block;
-        end loop;
-        return adress_of_node;
+        temp_block.all.Size := temp_block.all.Size - size;
+        return temp_block.all.Size;
     end Create_Block_Memory;
     
     procedure Remove_Block_Memory(Sgf : in T_SGF; node : in out T_Pointer_Node) is
@@ -742,11 +749,6 @@ package body sgf is
         else
             temp_block.Next_Block := new T_Memory'(node.all.Address, node.all.Size, temp_block.all.Next_Block);
         end if;
-        temp_block := Sgf.Memory;
-        while temp_block /= null loop
-            Put_Line(Long_Long_Integer'Image(temp_block.all.Address) & "   " & Long_Long_Integer'Image(temp_block.all.Size));
-            temp_block := temp_block.all.Next_Block;
-        end loop;
         Free(node);
     end Remove_Block_Memory;
     
