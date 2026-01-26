@@ -8,6 +8,7 @@ package body terminal is
     
     package SU renames Ada.Strings.Unbounded;
     
+    -- Tableau de taille indéfinie (pour les commandes)
     package String_Vectors is
             new Ada.Containers.Vectors
                     (Index_Type   => Natural,
@@ -40,7 +41,7 @@ package body terminal is
                 Start : Positive := S'First;
             begin
                 command.Clear;
-                
+                -- Récupérer la commande, les arguments et ses paramètres
                 for I in S'Range loop
                     if S (I) = ' ' then
                         if Start <= I - 1 then
@@ -49,7 +50,7 @@ package body terminal is
                         Start := I + 1;
                     end if;
                 end loop;
-                
+                -- récupérere le dernier
                 if Start <= S'Last then
                     command.Append(To_Unbounded_String(S(Start .. S'Last)));
                 end if;
@@ -67,7 +68,7 @@ package body terminal is
                     
                 elsif cmd = "size" then
                     Verify_Nb_Argument(command.Last_Index, 1, 1);
-                    Null;
+                    Change_File_Size(Sgf, To_String(command(command.First_Index+1)), Long_Long_Integer'Value(To_String(command(command.First_Index + 2))));
                     
                 elsif cmd = "mkdir" then
                     Verify_Nb_Argument(command.Last_Index, 1, 1);
