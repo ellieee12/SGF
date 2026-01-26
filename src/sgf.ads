@@ -28,10 +28,12 @@ package sgf is
     
     -- List the files and directories of a directory as indicated by a given path name
     -- If no path name given, list the files and directories of the current working directory
-    function List_Files(SGF : in out T_SGF; path : in String := ".") return String;
+    function List_Files(SGF : in out T_SGF; path : in String := ".";
+                       listSize : in boolean := False) return String;
     
     -- List recursively all the files and directory of the current working directory 
-    function List_Files_Recursive(SGF : in out T_SGF; path : in String := ".") return String;
+    function List_Files_Recursive(SGF : in out T_SGF; path : in String := ".";
+                                 listSize : in Boolean := False) return String;
     
     procedure Remove(SGF : in out T_SGF; path : in String);
     
@@ -110,7 +112,8 @@ private
     function List_Files_Recursive(SGF : in out T_SGF; 
                                   node : in T_Pointer_Node; 
                                   res : in Unbounded_String; 
-                                  level : in Natural) return Unbounded_String;
+                                  level : in Natural;
+                                  listSize : in boolean := False) return Unbounded_String;
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
     procedure Copy_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node; new_path : in String);

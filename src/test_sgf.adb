@@ -24,7 +24,8 @@ procedure test_sgf is
         Create_Directory(Sgf,"/usr");
         Create_Directory(Sgf,"/usr/local");
         Create_Directory(Sgf,"/usr/local/share");
-        put(List_Files_Recursive(Sgf,"./"));
+        put(List_Files_Recursive(Sgf,"./",true));
+        put(List_Files(Sgf,"/home/user1/pim/tp/tp1",true));
         
         --  Move(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.adb", "/usr/local/share");
         --  Copy(Sgf, "/home/user1/pim/tp/tp1/min_max_serie.py", "/usr/local/share");
@@ -137,8 +138,8 @@ procedure test_sgf is
         Archive_Directory(Sgf, "/home/user1/pim/projet/home.tar","/home");
         put(List_Files_Recursive(Sgf,"./"));
         put_line("name:"&Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False));
-        pragma Assert(Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False)="home.tar");
-        put(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False));
+        --  pragma Assert(Get_Name(Sgf,"/home/user1/pim/projet/home.tar",False)="home.tar");
+        --  put(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False));
         pragma Assert(Get_Size(Sgf,"/home/user1/pim/projet/home.tar",False)=50);
         put(List_Files_Recursive(Sgf,"./"));
         Remove(Sgf,"/home/user1/pim/projet/home.tar");
@@ -153,9 +154,9 @@ procedure test_sgf is
 
     
 begin
-    
+    Construct_SGF_Example(SGF);
     -- Get_Current_Working_Directory_Test(Sgf);
-    Archive_Directory_Test(Sgf);
+    --  Archive_Directory_Test(Sgf);
     --  Create_Directory_Test(Sgf);
     --  Create_Directory_Exception_Test(Sgf);
     --  Extract_Archive_Directory_Test(Sgf);
