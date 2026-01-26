@@ -338,7 +338,7 @@ package body sgf is
                           Path : in String;
                           Size : in Long_Long_Integer) is
         Negative_Size_Error, Empty_Name_Error: Exception;
-        current_child, new_node : T_Pointer_Node;
+        new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
         Name,Target_Path,Path_Unbounded : Unbounded_String;
         L, K : Integer;
@@ -431,7 +431,7 @@ package body sgf is
       
     procedure Create_Directory (Sgf : in  out T_SGF;
                                 Path: in String) is
-        current_child, new_node : T_Pointer_Node;
+        new_node : T_Pointer_Node;
         head,tail : T_Pointer_Node := null;
         Name,Target_Path,Path_Unbounded : Unbounded_String;
         L, K : Integer;
