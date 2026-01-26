@@ -84,10 +84,18 @@ package body terminal is
                     
                 elsif cmd = "ls" then
                     Verify_Nb_Argument(command.Last_Index, 2);
-                    if command.Last_Index = 2 and then To_String(command(command.First_Index + 1)) = "-r" then
+                    if command.Last_Index = 2 and then (To_String(command(command.First_Index + 1)) = "-rl" or To_String(command(command.First_Index + 1)) = "-lr") then
+                        Put_Line(List_Files_Recursive(Sgf, To_String(command(command.First_Index + 2)), True));
+                    elsif command.Last_Index = 1 and then (To_String(command(command.First_Index + 1)) = "-rl" or To_String(command(command.First_Index + 1)) = "-lr") then
+                        Put_Line(List_Files_Recursive(SGF => Sgf, listSize => True));
+                    elsif command.Last_Index = 2 and then To_String(command(command.First_Index + 1)) = "-r" then
                         Put_Line(List_Files_Recursive(Sgf, To_String(command(command.First_Index + 2))));
                     elsif command.Last_Index = 1 and then To_String(command(command.First_Index + 1)) = "-r" then
                         Put_Line(List_Files_Recursive(Sgf));
+                    elsif command.Last_Index = 2 and then To_String(command(command.First_Index + 1)) = "-l" then
+                        Put_Line(List_Files(Sgf, To_String(command(command.First_Index + 2)), True));
+                    elsif command.Last_Index = 1 and then To_String(command(command.First_Index + 1)) = "-l" then
+                        Put_Line(List_Files(SGF => Sgf, listSize => True));
                     elsif command.Last_Index = 1 then
                         Put_Line(List_Files(Sgf, To_String(command(command.First_Index + 1))));
                     else
