@@ -1,9 +1,15 @@
-with Ada.Strings.Unbounded;
-use Ada.Strings.Unbounded;
-package sgf is
+with GNAT.RegExp; use GNAT.RegExp;
+with GNAT.Regpat; use GNAT.Regpat;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Unchecked_Deallocation;
+with Ada.Containers.Vectors;
+with Ada.Text_IO;          use Ada.Text_IO;
 
+package sgf is
+    package SU renames Ada.Strings.Unbounded;
+    
     type T_SGF is private;
-    type T_Pointer_Node is private;
     
     -- Initialise SGF and create root as directory
     procedure Initialize (Sgf : out T_SGF);
@@ -51,6 +57,7 @@ package sgf is
     
     function Get_Size (Sgf : in out T_SGF ; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer;
     function Get_Name (Sgf : in out T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
+    function Get_Block_Size(nb : in Integer; Sgf : in T_SGF) return Long_Long_Integer;
     
 
     

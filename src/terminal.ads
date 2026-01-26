@@ -1,6 +1,17 @@
 with SGF; use SGF;
+with Ada.Containers.Vectors;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Text_IO.Unbounded_IO; use Ada.Text_IO.Unbounded_IO;
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package terminal is
+    
+    package String_Vectors is
+            new Ada.Containers.Vectors
+                    (Index_Type   => Natural,
+                     Element_Type => Unbounded_String);
+    use String_Vectors;
 
     procedure Start_Terminal (Sgf : in out T_SGF);
     
