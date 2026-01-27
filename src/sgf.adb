@@ -3,7 +3,10 @@ package body sgf is
     procedure Free is
             new Ada.Unchecked_Deallocation (Object => T_Node, Name => T_Pointer_Node);
     
-    function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
+    procedure Free is
+            new Ada.Unchecked_Deallocation (Object => T_Memory, Name => T_Pointer_Memory);
+    
+    function Get_Node_From_Path(SGF : in T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node is
         temp_node : T_Pointer_Node;
         start : Positive;
     begin
@@ -60,7 +63,7 @@ package body sgf is
         SGF.Current := temp_node;
     end Current_Directory;
     
-    function List_Files(SGF : in out T_SGF; 
+    function List_Files(SGF : in T_SGF; 
                         path : in String := ".";
                         listSize : in boolean := False) return String is
         temp_node : T_Pointer_Node;
@@ -79,7 +82,7 @@ package body sgf is
         return SU.To_String(res);
     end List_Files;
     
-    function List_Files_Recursive(SGF : in out T_SGF; 
+    function List_Files_Recursive(SGF : in T_SGF; 
                                   path : in String := ".";
                                   listSize : in boolean := False
                                  ) return String is
@@ -115,7 +118,7 @@ package body sgf is
         return SU.To_String(res);
     end List_Files_Recursive;
     
-    function List_Files_Recursive(SGF : in out T_SGF; 
+    function List_Files_Recursive(SGF : in T_SGF; 
                                   node : in T_Pointer_Node; 
                                   res : in Unbounded_String;
                                   level : in Natural;
@@ -170,10 +173,11 @@ package body sgf is
             end if;
         end if;
         Remove_Block_Memory(Sgf, temp_node);
+        Free(temp_node);
     end Remove;
     
     procedure Remove_Recursive(SGF : in out T_SGF; path : in String) is
-        temp_node : T_Pointer_Node;
+        temp_node, child_node : T_Pointer_Node;
     begin
         if path = "/" then
             raise Remove_Root with "Cannot remove the root !";
@@ -191,16 +195,17 @@ package body sgf is
             end if;
         end if;
         if temp_node.all.Child /= Null then
-            temp_node := temp_node.all.Child;
-            while temp_node /= null loop
-                Remove_Recursive(SGF, temp_node);
-                temp_node := temp_node.all.Next;
+            child_node := temp_node.all.Child;
+            while child_node /= null loop
+                Remove_Recursive(SGF, child_node);
+                child_node := child_node.all.Next;
             end loop;
         end if;
         Remove_Block_Memory(Sgf, temp_node);
+        Free(temp_node);
     end Remove_Recursive;
     
-    procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node) is
+    procedure Remove_Recursive(SGF : in out T_SGF; node : in out T_Pointer_Node) is
         temp_node : T_Pointer_Node;
     begin
         temp_node := node;
@@ -211,7 +216,8 @@ package body sgf is
                 temp_node := temp_node.all.Next;
             end loop;
         end if;
-        Remove_Block_Memory(Sgf, temp_node);
+        Remove_Block_Memory(Sgf, node);
+        Free(node);
     end Remove_Recursive;
     
     procedure Move(SGF : in out T_SGF; path : in String; new_path : in String) is
@@ -316,7 +322,6 @@ package body sgf is
             end loop;
         end;
     end Copy_Recursive;
-
   
     procedure Initialize (Sgf : out T_SGF) is 
       
@@ -399,7 +404,7 @@ package body sgf is
         Validate_Name(SU.To_String(Name));
         
         -- memory allocation of new file (give starting address)
-        address := Create_Block_Memory(Sgf, size);
+        Create_Block_Memory(Sgf, size, address);
         
         -- create file
         new_node := new T_Node'(Name,Size,address,False,null,head,null,null);
@@ -444,7 +449,7 @@ package body sgf is
         L, K : Integer;
         address : Long_Long_Integer;
     begin
-        address := Create_Block_Memory(Sgf, 10000);
+        Create_Block_Memory(Sgf, DIR_SIZE, address);
         Path_Unbounded := SU.To_Unbounded_String(Path);
         -- extract directory name
         L := Path'Last;
@@ -485,7 +490,7 @@ package body sgf is
         end if;
         Verify_Directory_Name_Existence(head.all.Child,SU.To_String(Name));
         Validate_Name(SU.To_String(Name));
-        new_node := new T_Node'(Name,10000,address,True,null,Head,null,null);
+        new_node := new T_Node'(Name,DIR_SIZE,address,True,null,Head,null,null);
 
         tail := Head.all.Child;
 
@@ -630,7 +635,7 @@ package body sgf is
         Create_File(Sgf,SU.To_String(new_path_name) & "/" & SU.To_String(archive_name), res);
     end Archive_Directory;
     
-    function Archive_Directory_Recursive (Sgf : in out T_SGF;
+    function Archive_Directory_Recursive (Sgf : in T_SGF;
                                           node : in T_Pointer_Node;
                                           res : in Long_Long_Integer) return Long_Long_Integer is
         temp_node : T_Pointer_Node;
@@ -661,7 +666,7 @@ package body sgf is
     begin
         temp_node := Get_Node_From_Path(Sgf,Path,IsDirectory);
         if temp_node.all.IsDirectory then 
-            return 10000;
+            return DIR_SIZE;
         else
             return temp_node.all.Size;
         end if;
@@ -695,30 +700,41 @@ package body sgf is
     
     procedure Change_File_Size(SGF : in out T_SGF; path : in String; size : in Long_Long_Integer) is
         temp_node : T_Pointer_Node;
+        address : Long_Long_Integer;
     begin
         if size < 0  then
             raise Negative_Size_Error;
         end if;
         
         temp_node := Get_Node_From_Path(Sgf,Path,False);
+        Create_Block_Memory(SGF, size, address);
+        Remove_Block_Memory(SGF, temp_node);
         temp_node.all.Size := size;
+        temp_node.all.Address := address;
     end Change_File_Size;
     
-    function Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer) return Long_Long_Integer is
+    procedure Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer; address : out Long_Long_Integer) is
         temp_block : T_Pointer_Memory := Sgf.Memory;
+        prev_block : T_Pointer_Memory := Null;
     begin
-        while temp_block /= null and then temp_block.all.Size < size loop
+        while temp_block /= Null and then temp_block.all.Size < size loop
+            prev_block := temp_block;
             temp_block := temp_block.all.Next_Block;
         end loop;
         if temp_block = Null then
             raise Size_Limit_Reach with "Stockage insufisant !";
         end if;
         temp_block.all.Size := temp_block.all.Size - size;
-        return temp_block.all.Size;
+        if temp_block.all.Size = 0 and then prev_block /= null then
+            prev_block.all.Next_Block := temp_block.all.Next_Block;
+            Free(temp_block);
+        end if;
+        address := temp_block.all.Size + temp_block.all.Address;
     end Create_Block_Memory;
     
     procedure Remove_Block_Memory(Sgf : in T_SGF; node : in out T_Pointer_Node) is
         temp_block : T_Pointer_Memory := Sgf.Memory;
+        remove_block : T_Pointer_Memory;
     begin
         while temp_block.all.Next_Block /= Null and then temp_block.all.Next_Block.all.Address < node.all.Address loop
             temp_block := temp_block.all.Next_Block;
@@ -731,9 +747,10 @@ package body sgf is
         end if;
         if temp_block.all.Next_Block /= Null and then temp_block.all.Address + temp_block.all.Size = temp_block.all.Next_Block.all.Address then
             temp_block.all.Size := temp_block.all.Size + temp_block.all.Next_Block.all.Size;
+            remove_block := temp_block.all.Next_Block;
             temp_block.all.Next_Block := temp_block.all.Next_Block.all.Next_Block;
+            Free(remove_block);
         end if;
-        Free(node);
     end Remove_Block_Memory;
     
     function Get_Block_Size(nb : in Integer; Sgf : in T_SGF) return Long_Long_Integer is

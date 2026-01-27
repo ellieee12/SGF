@@ -54,12 +54,12 @@ package sgf is
     -- List the files and directories of a directory as indicated by a given path name
     -- If no path name given, list the files and directories of the current working directory
     -- Pre => exists(target_path) and isDirectory(target_path) and not empty(target_path)
-    function List_Files(SGF : in out T_SGF; path : in String := ".";
+    function List_Files(SGF : in T_SGF; path : in String := ".";
                         listSize : in boolean := False) return String;
     
     -- List recursively all the files and directory of the current working directory 
     -- Pre => exists(target_path) and isDirectory(target_path) and not empty(target_path)
-    function List_Files_Recursive(SGF : in out T_SGF; path : in String := ".";
+    function List_Files_Recursive(SGF : in T_SGF; path : in String := ".";
                                   listSize : in Boolean := False) return String;
     
     -- Remove a file as indicated by a given path (relative and absolute path included)
@@ -135,6 +135,7 @@ package sgf is
     Not_A_File : exception;
 private
     SIZE_LIMIT : Constant Long_Long_Integer := 1000000000000;
+    DIR_SIZE : Constant Long_Long_Integer := 10000;
     type T_Node;
     type T_Pointer_Node is access T_Node;
     type T_Node is
@@ -178,7 +179,7 @@ private
     -- Get a node from a path (and precise if the node to find is a directory, or a file)
     -- Pre => exists(path)
     -- Post => onlyDirectory and isDirectory(path) or not onlyDirectory and not isDirectory(path)
-    function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node;
+    function Get_Node_From_Path(SGF : in T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node;
     
     -- Verify that the next file does not have the same name
     -- Pre => not isDirectory(Current_Node)
@@ -194,13 +195,13 @@ private
     
     -- Archive the elements of the precedent directory
     -- Pre => call by Archive_Directory_Recursive()
-    function Archive_Directory_Recursive (Sgf : in out T_SGF;
+    function Archive_Directory_Recursive (Sgf : in T_SGF;
                                           node : in T_Pointer_Node;
                                           res : in Long_Long_Integer) return Long_Long_Integer ;
     
     -- List recursively all the files and directory of the passed node 
     -- Pre => call by List_Files_Recursive()
-    function List_Files_Recursive(SGF : in out T_SGF; 
+    function List_Files_Recursive(SGF : in T_SGF; 
                                   node : in T_Pointer_Node; 
                                   res : in Unbounded_String; 
                                   level : in Natural;
@@ -208,7 +209,7 @@ private
     
     -- Remove a directory, empty or not, as well as files, indicated by the given node
     -- Pre => call by Remove_Recursive()
-    procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
+    procedure Remove_Recursive(SGF : in out T_SGF; node : in out T_Pointer_Node);
     
     -- Copy a directory or file to a target destination node
     -- Pre => call by Copy_Recursive()
@@ -227,10 +228,10 @@ private
     
     -- Create memory allocation for new file or directory
     -- Pre => for some block of sgf.memory => size < block.size
-    -- Post => for some block of sgf.memory => Create_Block_Memory'Result not in range block.address .. block.address + block.size
-    -- and Create_Block_Memory'Result > 0 
-    -- and Create_Block_Memory'Result < SIZE_LIMIT
-    function Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer) return Long_Long_Integer;
+    -- Post => for some block of sgf.memory => address not in range block.address .. block.address + block.size
+    -- and address > 0 
+    -- and address < SIZE_LIMIT
+    procedure Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer; address : out Long_Long_Integer);
     
     -- remove memory allocation for a file or directory
     -- Pre => for all block of sgf.memory => node.address not in range block.address .. block.address + block.size and node.address + node.size not in range block.address .. block.address + block.size

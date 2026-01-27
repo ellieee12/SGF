@@ -53,7 +53,7 @@ package body terminal is
                     Create_File(Sgf, To_String(command(command.First_Index + 1)), Long_Long_Integer'Value(To_String(command(command.First_Index + 2))));
                     
                 elsif cmd = "size" then
-                    Verify_Nb_Argument(command.Last_Index, 1, 1);
+                    Verify_Nb_Argument(command.Last_Index, 2, 2);
                     Change_File_Size(Sgf, To_String(command(command.First_Index+1)), Long_Long_Integer'Value(To_String(command(command.First_Index + 2))));
                     
                 elsif cmd = "mkdir" then
