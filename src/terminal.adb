@@ -2,7 +2,7 @@ package body terminal is
     
     package SU renames Ada.Strings.Unbounded;
     
-    -- Tableau de taille ind�finie (pour les commandes)
+    -- Tableau de taille indéfinie (pour les commandes)
     package String_Vectors is
             new Ada.Containers.Vectors
                     (Index_Type   => Natural,
@@ -20,12 +20,13 @@ package body terminal is
                          "    - mkdir : create directory" & ASCII.LF &
                          "    - cd : change current directory" & ASCII.LF &
                          "    - ls : display all childs of given path" & ASCII.LF &
-                         "    - ls -r : display all childs of given path and child directories" & ASCII.LF &
+                         "        - -r : allow recursivity over directories" & ASCII.LF &
+                         "        - -l : add more information about the files, inluding there sizes" & ASCII.LF &
                          "    - rm : remove file" & ASCII.LF &
-                         "    - rm -r : remove directory (including its childs)" & ASCII.LF &
+                         "        - -r : remove directory" & ASCII.LF &
                          "    - mv : move file (and eventually, rename it) into another directory" & ASCII.LF &
                          "    - cp : copy a file into another directory" & ASCII.LF &
-                         "    - cp -r : copy a directory (including its childs) to another directory" & ASCII.LF &
+                         "        - -r : copy a directory into another directory" & ASCII.LF &
                          "    - exit : leave terminal");
         Put("> ");
         Get_line(input);
@@ -35,7 +36,7 @@ package body terminal is
                 Start : Positive := S'First;
             begin
                 command.Clear;
-                -- R�cup�rer la commande, les arguments et ses param�tres
+                -- Récupérer la commande, les arguments et ses paramétres
                 for I in S'Range loop
                     if S (I) = ' ' then
                         if Start <= I - 1 then
@@ -44,7 +45,7 @@ package body terminal is
                         Start := I + 1;
                     end if;
                 end loop;
-                -- r�cup�rere le dernier
+                -- récupérere le dernier
                 if Start <= S'Last then
                     command.Append(To_Unbounded_String(S(Start .. S'Last)));
                 end if;
