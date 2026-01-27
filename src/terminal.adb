@@ -21,7 +21,7 @@ package body terminal is
                          "    - cd : change current directory" & ASCII.LF &
                          "    - ls : display all childs of given path" & ASCII.LF &
                          "        - -r : allow recursivity over directories" & ASCII.LF &
-                         "        - -l : add more information about the files, inluding there sizes" & ASCII.LF &
+                         "        - -l : add more information about the files, including their sizes" & ASCII.LF &
                          "    - rm : remove file" & ASCII.LF &
                          "        - -r : remove directory" & ASCII.LF &
                          "    - mv : move file (and eventually, rename it) into another directory" & ASCII.LF &
