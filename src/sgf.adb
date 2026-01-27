@@ -657,13 +657,13 @@ package body sgf is
         return temp_res;
     end Archive_Directory_Recursive;
     
-    function Get_Name (Sgf : in out T_SGF; Path : in String; IsDirectory : in Boolean) return String is
+    function Get_Name (Sgf : in T_SGF; Path : in String; IsDirectory : in Boolean) return String is
         
     begin
         return SU.To_String(Get_Node_From_Path(Sgf,Path,IsDirectory).all.Name);
     end Get_Name;
    
-    function Get_Size (Sgf : in out T_SGF; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer is
+    function Get_Size (Sgf : in T_SGF; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer is
         temp_node : T_Pointer_Node;
     begin
         temp_node := Get_Node_From_Path(Sgf,Path,IsDirectory);

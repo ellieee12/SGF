@@ -101,12 +101,12 @@ package sgf is
     -- Get size of a directory or a file size
     -- Pre => exists(path)
     -- Post => Get_Size'Result > 0
-    function Get_Size (Sgf : in out T_SGF ; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer;
+    function Get_Size (Sgf : in T_SGF ; Path : in String; IsDirectory : in Boolean) return Long_Long_Integer;
     
     -- Get the name of a directory or a file size
     -- Pre => exists(path)
     -- Post => Get_Name'Result = Base_Name(Path)
-    function Get_Name (Sgf : in out T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
+    function Get_Name (Sgf : in T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
    
     -- Get the size of a memory block
     -- Pre => Block_Exists(nb)
