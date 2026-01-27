@@ -428,7 +428,7 @@ package body sgf is
             while temp_node /= null loop
                 if temp_node.all.Name = Name then
                     if not temp_node.all.IsDirectory then
-                        raise File_Exists_Error with "This name is already used on another file or directory!";
+                        raise File_Exists_Error with "This name is already used on another file!";
                     end if;
                 end if;
                 temp_node := temp_node.all.Next;

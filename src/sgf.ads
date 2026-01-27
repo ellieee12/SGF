@@ -108,11 +108,14 @@ package sgf is
     -- Post => Get_Name'Result = Base_Name(Path)
     function Get_Name (Sgf : in out T_SGF ;  Path : in String; IsDirectory : in Boolean) return String;
    
-   
+    -- Get the size of a memory block
+    -- Pre => Block_Exists(nb)
+    -- Post => Get_Block_Size'Result > 0 
+    -- and Get_Block_Size'Result < SIZE_LIMIT
     function Get_Block_Size(nb : in Integer; Sgf : in T_SGF) return Long_Long_Integer;
     
 
-     -- Copy a directory to a target destination path
+    -- Copy a directory to a target destination path
     -- Pre => exists(path) and exists(new_path) and isDirectory(new_path) and isDirectory(path)
     -- Post => exists(path_to_copied_file)
     procedure Copy_Recursive(SGF : in out T_SGF; path : in String; new_path : in String);
@@ -165,40 +168,73 @@ private
     Remove_Root : exception;
     Size_Limit_Reach : exception;
     
-    
+    -- Verify the name of the node
+    -- Post => for all c of Name => C /= '\' and then C /= '/' and then C /= ':' and then C /= '*' and then C /= '?' and then C /= '"' and then C /= '<' and then C /= 
+    -- and then C /= '>' and then C /= '|' and then C /= '&' and then C /= '.'
+    -- and Character'Pos(c) >= 32 
+    -- and Character'Pos(c) /= 127
     procedure Validate_Name (Name : in String);
     
+    -- Get a node from a path (and precise if the node to find is a directory, or a file)
+    -- Pre => exists(path)
+    -- Post => onlyDirectory and isDirectory(path) or not onlyDirectory and not isDirectory(path)
     function Get_Node_From_Path(SGF : in out T_SGF; path : in String; onlyDirectory : in Boolean) return T_Pointer_Node;
     
+    -- Verify that the next file does not have the same name
+    -- Pre => not isDirectory(Current_Node)
+    -- Post => for all file of Current_Node.Next => file.name /= Name
     procedure Verify_File_Name_Existence (Current_Node : in T_Pointer_Node; 
                                           Name : in String);
+    
+    -- Verify that the next directory does not have the same name
+    -- Pre => isDirectory(Current_Node)
+    -- Post => for all directory of Current_Node.Next => directory.name /= Name
     procedure Verify_Directory_Name_Existence (Current_Node : in T_Pointer_Node; 
                                                Name : in String);
     
+    -- Archive the elements of the precedent directory
+    -- Pre => call by Archive_Directory_Recursive()
     function Archive_Directory_Recursive (Sgf : in out T_SGF;
                                           node : in T_Pointer_Node;
                                           res : in Long_Long_Integer) return Long_Long_Integer ;
     
+    -- List recursively all the files and directory of the passed node 
+    -- Pre => call by List_Files_Recursive()
     function List_Files_Recursive(SGF : in out T_SGF; 
                                   node : in T_Pointer_Node; 
                                   res : in Unbounded_String; 
                                   level : in Natural;
                                   listSize : in boolean := False) return Unbounded_String;
+    
+    -- Remove a directory, empty or not, as well as files, indicated by the given node
+    -- Pre => call by Remove_Recursive()
     procedure Remove_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node);
     
+    -- Copy a directory or file to a target destination node
+    -- Pre => call by Copy_Recursive()
     procedure Copy_Recursive(SGF : in out T_SGF; node : in T_Pointer_Node; new_path : in String);
     
+    -- Change the name of the archive ton contain the extension
+    -- Pre => call by Archive_Directory_Recursive()
+    -- Post => Ends_With (To_String (Zip_Name), ".tar.gz") and not Ends_With (To_String (Target_Path), "/")
     procedure Extract_Archive_Info (Arg : String;
                                     Target_Path : out Unbounded_String;
                                     Zip_Name : out Unbounded_String);
     
+    -- Get the sum of all node size from a sgf
+    -- Post => Get_Total_Size'Result > 0
     function Get_Total_Size(Sgf : in T_SGF) return Long_Long_Integer;
     
     -- Create memory allocation for new file or directory
-    -- Pre => check_memory(size) = true
-    -- Post => Check_memory
+    -- Pre => for some block of sgf.memory => size < block.size
+    -- Post => for some block of sgf.memory => Create_Block_Memory'Result not in range block.address .. block.address + block.size
+    -- and Create_Block_Memory'Result > 0 
+    -- and Create_Block_Memory'Result < SIZE_LIMIT
     function Create_Block_Memory(Sgf : in T_SGF; size : in Long_Long_Integer) return Long_Long_Integer;
     
+    -- remove memory allocation for a file or directory
+    -- Pre => for all block of sgf.memory => node.address not in range block.address .. block.address + block.size and node.address + node.size not in range block.address .. block.address + block.size
+    -- Post => for all block of sgf.memory => node.address in range block.address .. block.address + block.size and node.address + node.size in range block.address .. block.address + block.size
     procedure Remove_Block_Memory(Sgf : in T_SGF; node : in out T_Pointer_Node);
     
 end sgf;
