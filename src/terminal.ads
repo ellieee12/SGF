@@ -7,6 +7,9 @@ with Ada.Exceptions; use Ada.Exceptions;
 
 package terminal is
     
+    package SU renames Ada.Strings.Unbounded;
+    
+    -- Tableau de taille indéfinie (pour les commandes)
     package String_Vectors is
             new Ada.Containers.Vectors
                     (Index_Type   => Natural,

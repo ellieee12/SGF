@@ -1,13 +1,4 @@
 package body terminal is
-    
-    package SU renames Ada.Strings.Unbounded;
-    
-    -- Tableau de taille indéfinie (pour les commandes)
-    package String_Vectors is
-            new Ada.Containers.Vectors
-                    (Index_Type   => Natural,
-                     Element_Type => Unbounded_String);
-    use String_Vectors;
    
     procedure Start_Terminal(SGF : in out T_SGF) is
         input : Unbounded_String;
