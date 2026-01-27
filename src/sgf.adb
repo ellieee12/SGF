@@ -75,7 +75,9 @@ package body sgf is
             res := res & temp_node.all.Name ;
             if listSize and not temp_node.all.IsDirectory then
                 res := res & ASCII.HT
-                  & SU.To_Unbounded_String(Long_Long_Integer'Image(temp_node.all.Size))&ASCII.LF;
+                  & SU.To_Unbounded_String(Long_Long_Integer'Image(temp_node.all.Size)) & ASCII.LF;
+            else
+                res := res & ASCII.LF;
             end if;
             temp_node := temp_node.all.Next;
         end loop;

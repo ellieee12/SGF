@@ -186,12 +186,11 @@ procedure test_sgf is
     
 begin
     Construct_SGF_Example(SGF);
-    -- Get_Current_Working_Directory_Test(Sgf);
-    -- Archive_Directory_Test(Sgf);
-    --  Create_Directory_Test(Sgf);
-    --  Create_Directory_Exception_Test(Sgf);
-    --  Extract_Archive_Directory_Test(Sgf);
-    -- Memory_Management_Test(Sgf);
+    Get_Current_Working_Directory_Test(Sgf);
+    Archive_Directory_Test(Sgf);
+    Create_Directory_Test(Sgf);
+    Create_Directory_Exception_Test(Sgf);
+    Memory_Management_Test(Sgf);
     General_Scenario_Test(Sgf);
 end test_sgf;
 
